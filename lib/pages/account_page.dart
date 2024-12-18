@@ -1,16 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:sisko_v5/providers/sqlite_user_provider.dart';
-import 'package:sisko_v5/providers/theme_switch_provider.dart';
-import 'package:sisko_v5/providers/theme_provider.dart';
-import 'package:sisko_v5/widgets/version_app.dart';
+import 'package:app5/database/sqlite_helper.dart';
+import 'package:app5/pages/login_page.dart';
+import 'package:app5/providers/referral_provider.dart';
+import 'package:app5/providers/sekolahinfo_provider.dart';
+import 'package:app5/providers/sqlite_user_provider.dart';
+import 'package:app5/providers/theme_switch_provider.dart';
+import 'package:app5/providers/theme_provider.dart';
+import 'package:app5/providers/user_connection_provider.dart';
+import 'package:app5/widgets/version_app.dart';
 
-class AccountPage extends StatelessWidget {
+class AccountPage extends StatefulWidget {
   const AccountPage({super.key});
 
   @override
+  State<AccountPage> createState() => _AccountPageState();
+}
+
+class _AccountPageState extends State<AccountPage> {
+  bool isLoading = false;
+  @override
   Widget build(BuildContext context) {
     final user = Provider.of<SqliteUserProvider>(context);
+    final dbhelper = SqLiteHelper();
+
     return Scaffold(
       appBar: AppBar(
         surfaceTintColor: Theme.of(context).colorScheme.onPrimary,
@@ -194,7 +207,35 @@ class AccountPage extends StatelessWidget {
                     context.read<ThemeSwitchProvider>().toggle(value);
                     context.read<ThemeProvider>().toggleTheme();
                   },
-                )
+                ),
+              ],
+            ),
+            Row(
+              children: [
+                const Icon(
+                  Icons.group,
+                  size: 30,
+                ),
+                const SizedBox(
+                  width: 16,
+                ),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Referral'),
+                    ],
+                  ),
+                ),
+                Switch(
+                  value: context.watch<ReferralProvider>().referral,
+                  activeColor: context.watch<ThemeSwitchProvider>().isDark
+                      ? Colors.white
+                      : Colors.black,
+                  onChanged: (bool value) {
+                    context.read<ReferralProvider>().toggle(value);
+                  },
+                ),
               ],
             ),
             const Divider(
@@ -375,17 +416,51 @@ class AccountPage extends StatelessWidget {
               width: double.infinity,
               child: TextButton(
                 onPressed: () {
-                  //dbHelper.deletedb();
+                  setState(() {
+                    isLoading = true;
+                  });
+                  showDialog(
+                    context: context,
+                    builder: (context) {
+                      return AlertDialog(
+                        title: const Text('Kamu yakin ingin logout?'),
+                        content: const Text('Apakah anda yakin ingin keluar?'),
+                        actions: [
+                          TextButton(
+                            onPressed: () async {
+                              dbhelper.deletedb();
+                              Navigator.of(context).pushReplacement(
+                                  MaterialPageRoute(
+                                      builder: (BuildContext context) =>
+                                          const Login()));
+                            },
+                            child: const Text('Ya'),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                            child: const Text('Tidak'),
+                          )
+                        ],
+                      );
+                    },
+                  );
+                  setState(() {
+                    isLoading = false;
+                  });
                 },
                 style: TextButton.styleFrom(
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadiusDirectional.circular(8)),
                   backgroundColor: const Color.fromARGB(255, 216, 24, 24),
                 ),
-                child: const Text(
-                  'Logut',
-                  style: TextStyle(color: Colors.white),
-                ),
+                child: isLoading
+                    ? const CircularProgressIndicator.adaptive()
+                    : const Text(
+                        'Logout',
+                        style: TextStyle(color: Colors.white),
+                      ),
               ),
             ),
             Container(
@@ -403,6 +478,13 @@ class AccessSchool extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final dbhelper = SqLiteHelper();
+    final user = Provider.of<SqliteUserProvider>(context, listen: false);
+    var token = user.currentuser.token;
+    var npsn = user.currentuser.siskonpsn;
+    if (token != null && npsn != null) {
+      context.read<SekolahInfoProvider>().getInfoTop(token: token, npsn: npsn);
+    }
     return GestureDetector(
       onTap: () {
         showModalBottomSheet(
@@ -432,7 +514,9 @@ class AccessSchool extends StatelessWidget {
                         SizedBox(
                           width: 150,
                           child: TextButton(
-                            onPressed: () {},
+                            onPressed: () {
+                              Navigator.pushNamed(context, '/landingpage');
+                            },
                             style: TextButton.styleFrom(
                                 shape: RoundedRectangleBorder(
                                     borderRadius:
@@ -447,7 +531,38 @@ class AccessSchool extends StatelessWidget {
                         SizedBox(
                           width: 150,
                           child: TextButton(
-                            onPressed: () {},
+                            onPressed: () {
+                              showDialog(
+                                context: context,
+                                builder: (context) {
+                                  return AlertDialog(
+                                    title: const Text(
+                                        'Kamu yakin ingin disconnect?'),
+                                    content: const Text('Disconnect sekarang?'),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () async {
+                                          dbhelper.disconnectUser();
+                                          context
+                                              .read<UserConnectionProvider>()
+                                              .setDisconnect(true);
+
+                                          Navigator.pushReplacementNamed(
+                                              context, '/main');
+                                        },
+                                        child: const Text('Ya'),
+                                      ),
+                                      TextButton(
+                                        onPressed: () {
+                                          Navigator.of(context).pop();
+                                        },
+                                        child: const Text('Tidak'),
+                                      )
+                                    ],
+                                  );
+                                },
+                              );
+                            },
                             style: TextButton.styleFrom(
                                 shape: RoundedRectangleBorder(
                                     borderRadius:
@@ -466,30 +581,34 @@ class AccessSchool extends StatelessWidget {
               );
             });
       },
-      child: const Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Icon(
-            Icons.cloud_queue,
-            size: 50,
-          ),
-          SizedBox(
-            width: 16,
-          ),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Access to school system'),
-                Text('SMA 1 Yogyakarta'),
-              ],
-            ),
-          ),
-          Icon(
-            Icons.arrow_forward_ios,
-            size: 16,
-          ),
-        ],
+      child: Consumer<SekolahInfoProvider>(
+        builder: (context, provider, child) {
+          return Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Icon(
+                Icons.cloud_queue,
+                size: 50,
+              ),
+              const SizedBox(
+                width: 16,
+              ),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Access to school system'),
+                    Text('${provider.infotop.sekolah}'),
+                  ],
+                ),
+              ),
+              const Icon(
+                Icons.arrow_forward_ios,
+                size: 16,
+              ),
+            ],
+          );
+        },
       ),
     );
   }

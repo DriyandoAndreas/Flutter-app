@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-// import 'package:sisko_v5/utils/theme.dart';
-
-List<String> lists = <String>['Siswa', 'Guru', 'Umum'];
+import 'package:app5/services/register_service.dart';
 
 class SignUp extends StatefulWidget {
   const SignUp({super.key});
@@ -11,19 +9,45 @@ class SignUp extends StatefulWidget {
 }
 
 class _SignUpState extends State<SignUp> {
-  String dropdownValue = lists.first;
+  bool isLoading = false;
+
+// Map untuk posisi
+  Map<String, int> positionMap = {
+    'Guru': 2,
+    'Siswa': 3,
+    'Umum': 4,
+  };
+
+  List<String> lists = <String>['Guru', 'Siswa', 'Umum'];
+
+  String dropdownValue = 'Siswa';
+  TextEditingController nama = TextEditingController();
+  TextEditingController hp = TextEditingController();
+  TextEditingController email = TextEditingController();
+  TextEditingController password = TextEditingController();
+
+  failed() {
+    return ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        backgroundColor: Colors.red,
+        content: Text(
+          'Gagal registrasi. Nomor Handphone/Email sudah terdaftar',
+          textAlign: TextAlign.center,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final double width = MediaQuery.of(context).size.width;
 
     return Scaffold(
-      // backgroundColor: backgroundcolor,
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.onPrimary,
         surfaceTintColor: Theme.of(context).colorScheme.onPrimary,
         title: const Text('Sign Up'),
         centerTitle: true,
-        // backgroundColor: backgroundcolor,
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -48,6 +72,7 @@ class _SignUpState extends State<SignUp> {
                       SizedBox(
                         height: 50,
                         child: TextFormField(
+                          controller: nama,
                           decoration: const InputDecoration.collapsed(
                               hintText: 'Nama anda',
                               hintStyle: TextStyle(color: Colors.grey)),
@@ -60,6 +85,8 @@ class _SignUpState extends State<SignUp> {
                       SizedBox(
                         height: 50,
                         child: TextFormField(
+                          keyboardType: TextInputType.number,
+                          controller: hp,
                           decoration: const InputDecoration.collapsed(
                               hintText: '0812xxxxxxx',
                               hintStyle: TextStyle(color: Colors.grey)),
@@ -72,6 +99,8 @@ class _SignUpState extends State<SignUp> {
                       SizedBox(
                         height: 50,
                         child: TextFormField(
+                          keyboardType: TextInputType.emailAddress,
+                          controller: email,
                           decoration: const InputDecoration.collapsed(
                               hintText: '....@gmail.com',
                               hintStyle: TextStyle(color: Colors.grey)),
@@ -106,6 +135,7 @@ class _SignUpState extends State<SignUp> {
                         height: 50,
                         child: TextFormField(
                           obscureText: true,
+                          controller: password,
                           decoration: const InputDecoration.collapsed(
                               hintText:
                                   'Buat password baru anda min 6 karakter',
@@ -119,7 +149,44 @@ class _SignUpState extends State<SignUp> {
                         height: 50,
                         width: double.infinity,
                         child: TextButton(
-                          onPressed: () {},
+                          onPressed: () async {
+                            RegisterService service = RegisterService();
+                            try {
+                              setState(() {
+                                isLoading = true;
+                              });
+                              int? position = positionMap[dropdownValue];
+                              if (await service.register(
+                                action: 'registrasi',
+                                nama: nama.text,
+                                hp: hp.text,
+                                email: email.text,
+                                position: position.toString(), // Kirim posisi
+                                password: password.text,
+                              )) {
+                                setState(() {
+                                  isLoading = false;
+                                });
+                                // ignore: use_build_context_synchronously
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    backgroundColor: Colors.green,
+                                    content: Text(
+                                      'Registrasi berhasil. Silahkan cek inbox email anda',
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ),
+                                );
+                              } else {
+                                failed();
+                                setState(() {
+                                  isLoading = false;
+                                });
+                              }
+                            } catch (e) {
+                              return;
+                            }
+                          },
                           style: TextButton.styleFrom(
                             shape: RoundedRectangleBorder(
                                 borderRadius:
@@ -127,10 +194,14 @@ class _SignUpState extends State<SignUp> {
                             backgroundColor:
                                 const Color.fromARGB(255, 73, 72, 72),
                           ),
-                          child: const Text(
-                            'Daftar Sekarang',
-                            style: TextStyle(color: Colors.white),
-                          ),
+                          child: isLoading
+                              ? const CircularProgressIndicator.adaptive(
+                                  backgroundColor: Colors.white,
+                                )
+                              : const Text(
+                                  'Daftar Sekarang',
+                                  style: TextStyle(color: Colors.white),
+                                ),
                         ),
                       ),
                       const SizedBox(

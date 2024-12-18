@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:sisko_v5/models/teras_sekolah_model.dart';
+import 'package:app5/models/teras_sekolah_model.dart';
 
 class DetailTerasSekolah extends StatelessWidget {
   const DetailTerasSekolah({super.key});

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:sisko_v5/models/kelas_model.dart';
-import 'package:sisko_v5/providers/kelas_provider.dart';
-import 'package:sisko_v5/providers/sqlite_user_provider.dart';
+import 'package:app5/models/kelas_model.dart';
+import 'package:app5/providers/kelas_provider.dart';
+import 'package:app5/providers/sqlite_user_provider.dart';
 
 class DetailKelas extends StatefulWidget {
   const DetailKelas({super.key});
@@ -30,7 +30,7 @@ class _DetailKelasState extends State<DetailKelas> {
     try {
       await loadListkelas();
     } catch (e) {
-      throw Exception(e);
+      return;
     }
   }
 
@@ -48,14 +48,18 @@ class _DetailKelasState extends State<DetailKelas> {
             // ignore: use_build_context_synchronously
             ModalRoute.of(context)!.settings.arguments as KelasModel;
         var kodeKelas = kelas.kodeKelas;
-        context.read<KelasProvider>().infiniteLoadKelasOpens(
-              id: user.currentuser.siskoid ?? '',
-              tokenss: user.currentuser.tokenss ?? '',
-              kodeKelas: kodeKelas ?? '',
-            );
+        var id = user.currentuser.siskonpsn;
+        var tokenss = user.currentuser.tokenss;
+        if (id != null && tokenss != null && kodeKelas != null) {
+          context.read<KelasProvider>().infiniteLoadKelasOpens(
+                id: id,
+                tokenss: tokenss.substring(0, 30),
+                kodeKelas: kodeKelas,
+              );
+        }
       }
     } catch (e) {
-      throw Exception(e);
+      return;
     }
   }
 
@@ -73,10 +77,12 @@ class _DetailKelasState extends State<DetailKelas> {
           // ignore: use_build_context_synchronously
           ModalRoute.of(context)!.settings.arguments as KelasModel;
       var kodeKelas = kelas.kodeKelas;
-      context.read<KelasProvider>().refreshKelasOpen(
-          id: user.currentuser.siskoid ?? '',
-          tokenss: user.currentuser.tokenss ?? '',
-          kodeKelas: kodeKelas ?? '');
+      var id = user.currentuser.siskonpsn;
+      var tokenss = user.currentuser.tokenss;
+      if (id != null && tokenss != null && kodeKelas != null) {
+        context.read<KelasProvider>().refreshKelasOpen(
+            id: id, tokenss: tokenss.substring(0, 30), kodeKelas: kodeKelas);
+      }
     }
   }
 
@@ -135,9 +141,13 @@ class _DetailKelasState extends State<DetailKelas> {
   Widget buildList() {
     return Consumer<KelasProvider>(
       builder: (context, kelasOpen, child) {
-        if (kelasOpen.infiniteListKelasOpen.isEmpty) {
+        if (kelasOpen.isLoading) {
           return const Center(
-            child: CircularProgressIndicator(),
+            child: CircularProgressIndicator.adaptive(),
+          );
+        } else if (kelasOpen.infiniteListKelasOpen.isEmpty) {
+          return const Center(
+            child: Text('Tidak ada data siswa pada kelas ini'),
           );
         } else {
           return ListView.builder(
@@ -156,13 +166,13 @@ class _DetailKelasState extends State<DetailKelas> {
                       title: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text(kelas.nis),
+                          Text(kelas.nis ?? ''),
                           const SizedBox(
                             width: 10,
                           ),
                           Expanded(
                             child: Text(
-                              kelas.namaLengkap,
+                              kelas.namaLengkap ?? '',
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -179,7 +189,7 @@ class _DetailKelasState extends State<DetailKelas> {
                 return const Padding(
                   padding: EdgeInsets.all(15),
                   child: Center(
-                    child: CircularProgressIndicator(),
+                    child: CircularProgressIndicator.adaptive(),
                   ),
                 );
               }

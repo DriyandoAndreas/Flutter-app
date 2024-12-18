@@ -1,8 +1,28 @@
 import 'package:flutter/material.dart';
-// import 'package:sisko_v5/utils/theme.dart';
+import 'package:app5/services/forget_passwrod_service.dart';
 
-class ForgetPassword extends StatelessWidget {
+class ForgetPassword extends StatefulWidget {
   const ForgetPassword({super.key});
+
+  @override
+  State<ForgetPassword> createState() => _ForgetPasswordState();
+}
+
+class _ForgetPasswordState extends State<ForgetPassword> {
+  bool isLoading = false;
+  TextEditingController hp = TextEditingController();
+  TextEditingController email = TextEditingController();
+  failed() {
+    return ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        backgroundColor: Colors.red,
+        content: Text(
+          'Gagal reset. Nomor Handphone/Email kosong',
+          textAlign: TextAlign.center,
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,6 +55,8 @@ class ForgetPassword extends StatelessWidget {
                       SizedBox(
                         height: 50,
                         child: TextFormField(
+                          controller: hp,
+                          keyboardType: TextInputType.number,
                           decoration: const InputDecoration.collapsed(
                               hintText: '0812xxxxxxx',
                               hintStyle: TextStyle(color: Colors.grey)),
@@ -47,6 +69,8 @@ class ForgetPassword extends StatelessWidget {
                       SizedBox(
                         height: 50,
                         child: TextFormField(
+                          controller: email,
+                          keyboardType: TextInputType.emailAddress,
                           decoration: const InputDecoration.collapsed(
                               hintText: '....@gmail.com',
                               hintStyle: TextStyle(color: Colors.grey)),
@@ -59,7 +83,40 @@ class ForgetPassword extends StatelessWidget {
                         height: 50,
                         width: double.infinity,
                         child: TextButton(
-                          onPressed: () {},
+                          onPressed: () async {
+                            ForgetPasswrodService service =
+                                ForgetPasswrodService();
+                            try {
+                              setState(() {
+                                isLoading = true;
+                              });
+                              if (await service.forget(
+                                  action: 'pwd-reset',
+                                  hp: hp.text,
+                                  email: email.text)) {
+                                setState(() {
+                                  isLoading = false;
+                                });
+                                // ignore: use_build_context_synchronously
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    backgroundColor: Colors.green,
+                                    content: Text(
+                                      'Reset berhasil. Silahkan cek inbox email atau Whatsapp anda',
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ),
+                                );
+                              } else {
+                                setState(() {
+                                  isLoading = false;
+                                });
+                                failed();
+                              }
+                            } catch (e) {
+                              return;
+                            }
+                          },
                           style: TextButton.styleFrom(
                             shape: RoundedRectangleBorder(
                                 borderRadius:
@@ -67,10 +124,14 @@ class ForgetPassword extends StatelessWidget {
                             backgroundColor:
                                 const Color.fromARGB(255, 73, 72, 72),
                           ),
-                          child: const Text(
-                            'Reset Password',
-                            style: TextStyle(color: Colors.white),
-                          ),
+                          child: isLoading
+                              ? const CircularProgressIndicator.adaptive(
+                                  backgroundColor: Colors.white,
+                                )
+                              : const Text(
+                                  'Reset Password',
+                                  style: TextStyle(color: Colors.white),
+                                ),
                         ),
                       ),
                     ],

@@ -2,6 +2,7 @@ class SqliteUserModel {
   String? iduser;
   String? username;
   String? password;
+  String? nomor;
   String? nomorsc;
   String? position;
   String? cpos;
@@ -30,11 +31,15 @@ class SqliteUserModel {
   String? siskoHakAkses;
   int? islogin;
   String? hp;
+  String? tanggallahir;
+  String? namalengkap;
+  String? kelas;
 
   SqliteUserModel({
     this.iduser,
     this.username,
     this.password,
+    this.nomor,
     this.nomorsc,
     this.position,
     this.cpos,
@@ -63,12 +68,16 @@ class SqliteUserModel {
     this.tokenss,
     this.islogin,
     this.hp,
+    this.tanggallahir,
+    this.namalengkap,
+    this.kelas,
   });
   Map<String, Object?> toMap() {
     return {
       'id_user': iduser,
       'user_name': username,
       'password': password,
+      'nomor': nomor,
       'nomor_sc': nomorsc,
       'position': position,
       'cpos': cpos,
@@ -97,6 +106,9 @@ class SqliteUserModel {
       'tokenpp': tokenpp,
       'islogin': islogin,
       'hp': hp,
+      'tgl_lahir': tanggallahir,
+      'nama_lengkap': namalengkap,
+      'kelas' : kelas,
     };
   }
 }

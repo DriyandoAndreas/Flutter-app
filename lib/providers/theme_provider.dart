@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:sisko_v5/utils/theme.dart';
+import 'package:app5/utils/theme.dart';
 
 class ThemeProvider with ChangeNotifier {
   ThemeData _themeData = lightMode;

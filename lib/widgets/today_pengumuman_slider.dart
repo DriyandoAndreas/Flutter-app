@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:carousel_slider/carousel_slider.dart';
-import 'package:sisko_v5/models/pengumuman_model.dart';
-import 'package:sisko_v5/providers/pengumuman_provider.dart';
-import 'package:sisko_v5/providers/sqlite_user_provider.dart';
+import 'package:app5/models/pengumuman_model.dart';
+import 'package:app5/providers/pengumuman_provider.dart';
+import 'package:app5/providers/sqlite_user_provider.dart';
 
 class TodayPengumumanSlider extends StatelessWidget {
   const TodayPengumumanSlider({super.key});
@@ -13,9 +13,9 @@ class TodayPengumumanSlider extends StatelessWidget {
   Widget build(BuildContext context) {
     final user = Provider.of<SqliteUserProvider>(context);
 
-    String id = user.currentuser.siskoid.toString();
-    String tokenss = user.currentuser.tokenss.toString();
-    if (user.currentuser.siskoid != null && user.currentuser.tokenss != null) {
+    var id = user.currentuser.siskonpsn;
+    var tokenss = user.currentuser.tokenss;
+    if (id != null && tokenss != null) {
       context.watch<PengumumanProvider>().initInfinite(
             id: id,
             tokenss: tokenss.substring(0, 30),
@@ -34,10 +34,7 @@ class TodayPengumumanSlider extends StatelessWidget {
       count = todayAnnouncements.length;
     }
     if (todayAnnouncements.isEmpty) {
-      return Container(
-        margin: const EdgeInsets.all(16),
-        child: const Center(child: SizedBox.shrink()),
-      );
+      return const Center(child: SizedBox.shrink());
     }
 
     return Container(
@@ -72,6 +69,9 @@ class TodayPengumumanSlider extends StatelessWidget {
                     image: DecorationImage(
                       fit: BoxFit.cover,
                       image: NetworkImage(announcement.image ?? ''),
+                      onError: (exception, stackTrace) {
+                        const Icon(Icons.image);
+                      },
                     ),
                   ),
                   child: ClipRRect(
@@ -90,6 +90,8 @@ class TodayPengumumanSlider extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
                                 announcement.judul ?? '',
                                 style: const TextStyle(
                                     fontSize: 16.0,
@@ -97,22 +99,34 @@ class TodayPengumumanSlider extends StatelessWidget {
                               ),
                               const SizedBox(height: 10),
                               Row(
+                                mainAxisSize: MainAxisSize.min,
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Text(
-                                    announcement.post ?? '',
-                                    style: const TextStyle(
-                                        fontSize: 14.0,
-                                        color:
-                                            Color.fromARGB(255, 121, 120, 120)),
+                                  Expanded(
+                                    child: Text(
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      announcement.post ?? '',
+                                      style: TextStyle(
+                                          fontSize: 14.0,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .tertiary),
+                                    ),
+                                  ),
+                                  const SizedBox(
+                                    width: 8,
                                   ),
                                   Text(
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
                                     announcement.tgl ?? '',
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                         fontSize: 14.0,
-                                        color:
-                                            Color.fromARGB(255, 121, 120, 120)),
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .tertiary),
                                   ),
                                 ],
                               ),

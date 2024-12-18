@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:sisko_v5/models/teras_sekolah_model.dart';
-import 'package:sisko_v5/services/berita_service.dart';
+import 'package:app5/models/teras_sekolah_model.dart';
+import 'package:app5/services/berita_service.dart';
 
 class BeritaProvider with ChangeNotifier {
   final beritaService = BeritaService();
@@ -25,9 +25,10 @@ class BeritaProvider with ChangeNotifier {
         tokenss: tokenss,
         limit: limit,
       );
+
       notifyListeners();
     } catch (e) {
-      throw Exception(e);
+      return;
     }
   }
 
@@ -43,7 +44,7 @@ class BeritaProvider with ChangeNotifier {
       _infinitelist = respon;
       notifyListeners();
     } catch (e) {
-      throw Exception(e);
+      return;
     }
   }
 
@@ -58,5 +59,11 @@ class BeritaProvider with ChangeNotifier {
     _infinitelist = [];
     hasMore = true;
     await infiniteLoad(id: id, tokenss: tokenss);
+  }
+
+  Future<void> clearState() async {
+    _list = [];
+    _infinitelist = [];
+    notifyListeners();
   }
 }

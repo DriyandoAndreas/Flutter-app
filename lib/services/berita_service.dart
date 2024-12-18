@@ -1,5 +1,5 @@
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:sisko_v5/models/teras_sekolah_model.dart';
+import 'package:app5/models/teras_sekolah_model.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
@@ -32,7 +32,7 @@ class BeritaService {
             'Failed to get list berita. Status code: ${response.statusCode}');
       }
     } catch (e) {
-      throw Exception(e);
+      return [];
     }
   }
 
@@ -68,7 +68,7 @@ class BeritaService {
     try {
       await http.post(url, headers: headers, body: body);
     } catch (e) {
-      throw Exception(e);
+      return;
     }
   }
 
@@ -104,7 +104,7 @@ class BeritaService {
     try {
       await http.post(url, headers: headers, body: body);
     } catch (e) {
-      throw Exception(e);
+      return;
     }
   }
 
@@ -126,7 +126,7 @@ class BeritaService {
     try {
       await http.post(url, headers: headers, body: body);
     } catch (e) {
-      throw Exception(e);
+      return;
     }
   }
 }

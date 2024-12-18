@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:provider/provider.dart';
-import 'package:sisko_v5/database/sqlite_helper.dart';
-import 'package:sisko_v5/models/sqlite_user_model.dart';
-import 'package:sisko_v5/providers/auth_provider.dart';
-import 'package:sisko_v5/providers/user_info_provider.dart';
-import 'package:sisko_v5/widgets/version_app.dart';
-
-//background assets
+import 'package:app5/database/sqlite_helper.dart';
+import 'package:app5/models/sqlite_user_model.dart';
+import 'package:app5/providers/auth_provider.dart';
+import 'package:app5/providers/user_info_provider.dart';
+import 'package:app5/widgets/version_app.dart';
 
 class Login extends StatefulWidget {
   const Login({super.key});
@@ -25,7 +23,7 @@ class _LoginState extends State<Login> {
   TextEditingController hp = TextEditingController();
   TextEditingController password = TextEditingController();
   //initialize carousel controller
-  final CarouselController _controller = CarouselController();
+  final CarouselSliderController _controller = CarouselSliderController();
   int _current = 0;
   //isloading
   bool isLoading = false;
@@ -64,7 +62,6 @@ class _LoginState extends State<Login> {
         password: password.text,
         action: 'login',
       )) {
-        
         //get usersinfo
         await info.getUserInfo(token: auth.user.token!);
         SqLiteHelper dbHelper = SqLiteHelper();
@@ -81,6 +78,7 @@ class _LoginState extends State<Login> {
           kelamin: info.userInfo.kelamin,
           lastlogin: info.userInfo.lastlogin,
           nama: info.userInfo.nama,
+          nomor: auth.user.nomor,
           nomorsc: info.userInfo.nomorsc,
           password: info.userInfo.password,
           photo: info.userInfo.photo,
@@ -101,6 +99,8 @@ class _LoginState extends State<Login> {
           tokenpp: auth.user.tokenpp,
           islogin: 1,
           hp: auth.user.hp,
+          tanggallahir: auth.user.tglLahir,
+          namalengkap: auth.user.siskonamalengkap,
         );
         //insert to sqlite
         dbHelper.insertUser(userdata);
@@ -187,7 +187,13 @@ class _LoginState extends State<Login> {
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
               TextButton(
-                onPressed: () {},
+                onPressed: () {
+                  setState(() {
+                    hp.text = '0811223344';
+                    password.text = 'sayaguru';
+                  });
+                  loginController();
+                },
                 style: TextButton.styleFrom(
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadiusDirectional.circular(8)),
@@ -208,7 +214,13 @@ class _LoginState extends State<Login> {
                 width: 12,
               ),
               TextButton(
-                onPressed: () {},
+                onPressed: () {
+                  setState(() {
+                    hp.text = '0811224455';
+                    password.text = 'siswademo';
+                  });
+                  loginController();
+                },
                 style: TextButton.styleFrom(
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadiusDirectional.circular(8)),
@@ -229,7 +241,13 @@ class _LoginState extends State<Login> {
                 width: 12,
               ),
               TextButton(
-                onPressed: () {},
+                onPressed: () {
+                  setState(() {
+                    hp.text = '0811225566';
+                    password.text = 'ortudemo';
+                  });
+                  loginController();
+                },
                 style: TextButton.styleFrom(
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadiusDirectional.circular(8)),
@@ -284,8 +302,8 @@ class _LoginState extends State<Login> {
                   borderRadius: BorderRadiusDirectional.circular(8)),
               backgroundColor: const Color.fromARGB(255, 73, 72, 72),
             ),
-            child: const CircularProgressIndicator(
-              color: Colors.white,
+            child: const CircularProgressIndicator.adaptive(
+              backgroundColor: Colors.white,
             )),
       );
     }
@@ -356,6 +374,7 @@ class _LoginState extends State<Login> {
     Widget loginForm() {
       return Center(
         child: Card(
+          color: Theme.of(context).colorScheme.onPrimary,
           margin: const EdgeInsets.symmetric(
             horizontal: 12,
           ),
@@ -443,6 +462,7 @@ class _LoginState extends State<Login> {
     }
 
     return Scaffold(
+      backgroundColor: Theme.of(context).colorScheme.surfaceContainer,
       body: SingleChildScrollView(
         child: Column(
           children: [

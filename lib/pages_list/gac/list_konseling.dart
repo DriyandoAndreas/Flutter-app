@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import 'package:sisko_v5/providers/konseling_provider.dart';
-import 'package:sisko_v5/providers/sqlite_user_provider.dart';
-import 'package:sisko_v5/services/konseling_service.dart';
+import 'package:app5/providers/konseling_provider.dart';
+import 'package:app5/providers/sqlite_user_provider.dart';
+import 'package:app5/services/konseling_service.dart';
 
 class ListKonseling extends StatefulWidget {
   const ListKonseling({super.key});
@@ -41,22 +41,22 @@ class _ListKonselingState extends State<ListKonseling> {
     try {
       await _loadList();
     } catch (e) {
-      throw Exception(e);
+      return;
     }
   }
 
   Future<void> _loadList() async {
     try {
       final user = Provider.of<SqliteUserProvider>(context, listen: false);
-      String id = user.currentuser.siskoid ?? '';
-      String tokenss = user.currentuser.tokenss ?? '';
-      if (id != '' && tokenss != '') {
+      var id = user.currentuser.siskonpsn;
+      var tokenss = user.currentuser.tokenss;
+      if (id != null && tokenss != null) {
         context
             .read<KonselingProvider>()
             .initList(id: id, tokenss: tokenss.substring(0, 30));
       }
     } catch (e) {
-      throw Exception(e);
+      return;
     }
   }
 
@@ -70,15 +70,15 @@ class _ListKonselingState extends State<ListKonseling> {
   Future<void> _refreshList() async {
     try {
       final user = Provider.of<SqliteUserProvider>(context, listen: false);
-      String id = user.currentuser.siskoid ?? '';
-      String tokenss = user.currentuser.tokenss ?? '';
-      if (id != '' && tokenss != '') {
+      var id = user.currentuser.siskonpsn;
+      var tokenss = user.currentuser.tokenss;
+      if (id != null && tokenss != null) {
         context
             .read<KonselingProvider>()
             .refresh(id: id, tokenss: tokenss.substring(0, 30));
       }
     } catch (e) {
-      throw Exception(e);
+      return;
     }
   }
 
@@ -95,7 +95,7 @@ class _ListKonselingState extends State<ListKonseling> {
         surfaceTintColor: Theme.of(context).colorScheme.onPrimary,
         title: const Text('Konseling'),
       ),
-      body: RefreshIndicator(
+      body: RefreshIndicator.adaptive(
         onRefresh: _refreshList,
         child: Column(
           children: [
@@ -124,7 +124,7 @@ class _ListKonselingState extends State<ListKonseling> {
       builder: (context, konseling, child) {
         if (konseling.list.isEmpty) {
           return const Center(
-            child: CircularProgressIndicator(),
+            child: CircularProgressIndicator.adaptive(),
           );
         } else {
           return ListView.builder(
@@ -194,6 +194,7 @@ class _ListKonselingState extends State<ListKonseling> {
             konselings.kasus ?? '',
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
+            style: TextStyle(color: Theme.of(context).colorScheme.tertiary),
           ),
           Text(
             konselings.petugas ?? '',
@@ -237,9 +238,9 @@ class _ListKonselingState extends State<ListKonseling> {
               onPressed: () async {
                 final user =
                     Provider.of<SqliteUserProvider>(context, listen: false);
-                String id = user.currentuser.siskoid ?? '';
-                String tokenss = user.currentuser.tokenss ?? '';
-                if (id != '' && tokenss != '') {
+                var id = user.currentuser.siskonpsn;
+                var tokenss = user.currentuser.tokenss;
+                if (id != null && tokenss != null) {
                   try {
                     await KonselingService().deleteKonseling(
                       id: id,
@@ -249,19 +250,24 @@ class _ListKonselingState extends State<ListKonseling> {
                           '${konseling.nis}|${konseling.kodePegawai}|${konseling.tanggalJam}',
                     );
                     scaffold.showSnackBar(
-                      const SnackBar(
-                        content: Text('Berhasil dihapus'),
-                        duration: Duration(seconds: 1),
-                        behavior: SnackBarBehavior.floating,
-                        margin:
-                            EdgeInsets.only(bottom: 150, left: 15, right: 15),
+                      SnackBar(
+                        // ignore: use_build_context_synchronously
+                        backgroundColor:
+                            // ignore: use_build_context_synchronously
+                            Theme.of(context).colorScheme.primary,
+                        content: Text('Berhasil dihapus',
+                            style: TextStyle(
+                                // ignore: use_build_context_synchronously
+                                color:
+                                    // ignore: use_build_context_synchronously
+                                    Theme.of(context).colorScheme.onPrimary)),
                       ),
                     );
                     // ignore: use_build_context_synchronously
                     Navigator.of(context).pop();
                     _refreshList();
                   } catch (e) {
-                    throw Exception(e);
+                    return;
                   }
                 }
               },

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import 'package:sisko_v5/providers/presensi_provider.dart';
-import 'package:sisko_v5/providers/sqlite_user_provider.dart';
+import 'package:app5/providers/presensi_provider.dart';
+import 'package:app5/providers/sqlite_user_provider.dart';
 
 class ListPresensi extends StatefulWidget {
   const ListPresensi({super.key});
@@ -17,6 +17,11 @@ class _ListPresensiState extends State<ListPresensi> {
   @override
   void initState() {
     super.initState();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
     initdata();
   }
 
@@ -29,26 +34,34 @@ class _ListPresensiState extends State<ListPresensi> {
     try {
       await _loadList();
     } catch (e) {
-      throw Exception('Error while init data');
+      return;
     }
   }
 
   Future<void> _loadList() async {
     try {
       final user = Provider.of<SqliteUserProvider>(context, listen: false);
-      context.read<PresensiProvider>().initList(
-          id: user.currentuser.siskoid ?? '',
-          tokenss: user.currentuser.tokenss ?? '');
+      var id = user.currentuser.siskonpsn;
+      var tokenss = user.currentuser.tokenss;
+      if (id != null && tokenss != null) {
+        context
+            .read<PresensiProvider>()
+            .initList(id: id, tokenss: tokenss.substring(0, 30));
+      }
     } catch (e) {
-      throw Exception(e);
+      return;
     }
   }
 
   Future<void> _refreshList() async {
     final user = Provider.of<SqliteUserProvider>(context, listen: false);
-    context.read<PresensiProvider>().refresh(
-        id: user.currentuser.siskoid ?? '',
-        tokenss: user.currentuser.tokenss ?? '');
+    var id = user.currentuser.siskonpsn;
+    var tokenss = user.currentuser.tokenss;
+    if (id != null && tokenss != null) {
+      context
+          .read<PresensiProvider>()
+          .refresh(id: id, tokenss: tokenss.substring(0, 30));
+    }
   }
 
   @override
@@ -61,7 +74,7 @@ class _ListPresensiState extends State<ListPresensi> {
         surfaceTintColor: Theme.of(context).colorScheme.onPrimary,
         title: const Text('Presensi'),
       ),
-      body: RefreshIndicator(
+      body: RefreshIndicator.adaptive(
         onRefresh: _refreshList,
         child: Column(
           children: [
@@ -174,7 +187,7 @@ class _ListPresensiState extends State<ListPresensi> {
       builder: (context, presensiList, child) {
         if (presensiList.list.isEmpty) {
           return const Center(
-            child: CircularProgressIndicator(),
+            child: CircularProgressIndicator.adaptive(),
           );
         } else {
           return ListView.builder(
@@ -183,7 +196,7 @@ class _ListPresensiState extends State<ListPresensi> {
             itemBuilder: (context, index) {
               if (presensiList.list.isEmpty) {
                 return const Center(
-                  child: CircularProgressIndicator(),
+                  child: CircularProgressIndicator.adaptive(),
                 );
               } else {
                 final presensi = presensiList.list[index];
@@ -208,7 +221,7 @@ class _ListPresensiState extends State<ListPresensi> {
                       trailing: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          if (presensi.H != null &&
+                          if (presensi.H != '' &&
                               presensi.H!.isNotEmpty &&
                               presensi.H != '0')
                             Container(
@@ -223,7 +236,7 @@ class _ListPresensiState extends State<ListPresensi> {
                                 ),
                               ),
                             ),
-                          if (presensi.S != null &&
+                          if (presensi.S != '' &&
                               presensi.S!.isNotEmpty &&
                               presensi.S != '0')
                             Container(
@@ -238,7 +251,7 @@ class _ListPresensiState extends State<ListPresensi> {
                                 ),
                               ),
                             ),
-                          if (presensi.I != null &&
+                          if (presensi.I != '' &&
                               presensi.I!.isNotEmpty &&
                               presensi.I != '0')
                             Container(
@@ -254,7 +267,7 @@ class _ListPresensiState extends State<ListPresensi> {
                                 ),
                               ),
                             ),
-                          if (presensi.A != null &&
+                          if (presensi.A != '' &&
                               presensi.A!.isNotEmpty &&
                               presensi.A != '0')
                             Container(
@@ -269,7 +282,7 @@ class _ListPresensiState extends State<ListPresensi> {
                                 ),
                               ),
                             ),
-                          if (presensi.T != null &&
+                          if (presensi.T != '' &&
                               presensi.T!.isNotEmpty &&
                               presensi.T != '0')
                             Container(
@@ -288,7 +301,7 @@ class _ListPresensiState extends State<ListPresensi> {
                             width: 5,
                           ),
                           if (total != 0 && !persentase.isNaN)
-                            Text('$total $persentase%'),
+                            Text('$total ($persentase%)'),
                           const Icon(
                             Icons.arrow_forward_ios,
                             color: Color.fromARGB(255, 121, 120, 120),

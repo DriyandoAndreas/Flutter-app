@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import 'package:sisko_v5/database/sqlite_helper.dart';
-import 'package:sisko_v5/models/konseling_model.dart';
-import 'package:sisko_v5/models/sqlite_user_model.dart';
-import 'package:sisko_v5/providers/konseling_provider.dart';
-import 'package:sisko_v5/services/konseling_service.dart';
+import 'package:app5/database/sqlite_helper.dart';
+import 'package:app5/models/konseling_model.dart';
+import 'package:app5/models/sqlite_user_model.dart';
+import 'package:app5/providers/konseling_provider.dart';
+import 'package:app5/services/konseling_service.dart';
 
 class FormKonselingEdit extends StatefulWidget {
   const FormKonselingEdit({super.key});
@@ -52,7 +52,7 @@ class _FormKonselingEditState extends State<FormKonselingEdit>
         _users = users;
       });
     } catch (e) {
-      throw Exception('Gagal mengambil data dari sqlite');
+      return;
     }
   }
 
@@ -91,14 +91,13 @@ class _FormKonselingEditState extends State<FormKonselingEdit>
     });
     try {
       final currentUser = _users.isNotEmpty ? _users.first : null;
-      String? id = currentUser?.siskoid;
+      String? id = currentUser?.siskonpsn;
       String? tokenss = currentUser?.tokenss;
       if (id != null && tokenss != null) {
         final lists = await KonselingService().getPoin(
           id: id,
           tokenss: tokenss.substring(0, 30),
         );
-
         setState(() {
           _poins = lists;
           _isLoading = false;
@@ -107,14 +106,14 @@ class _FormKonselingEditState extends State<FormKonselingEdit>
         throw Exception('Invalid ID or token');
       }
     } catch (e) {
-      throw Exception('gagal load list $e');
+      return;
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final currentUser = _users.isNotEmpty ? _users.first : null;
-    String? id = currentUser?.siskoid;
+    String? id = currentUser?.siskonpsn;
     String? tokenss = currentUser?.tokenss;
     final inputDate = DateFormat('yyyy-MM-dd').format(selectedDate);
     final inputTime = _formatTime(selectedTime);
@@ -153,6 +152,8 @@ class _FormKonselingEditState extends State<FormKonselingEdit>
               SizedBox(
                 height: 150,
                 child: TextFormField(
+                  style:
+                      TextStyle(color: Theme.of(context).colorScheme.tertiary),
                   focusNode: _focusNode2,
                   textInputAction: TextInputAction.done,
                   controller: kasus,
@@ -174,6 +175,8 @@ class _FormKonselingEditState extends State<FormKonselingEdit>
               SizedBox(
                 height: 150,
                 child: TextFormField(
+                  style:
+                      TextStyle(color: Theme.of(context).colorScheme.tertiary),
                   focusNode: _focusNode3,
                   textInputAction: TextInputAction.done,
                   controller: penanganan,
@@ -198,7 +201,8 @@ class _FormKonselingEditState extends State<FormKonselingEdit>
                     context: context,
                     builder: (BuildContext context) {
                       if (_isLoading) {
-                        return const Center(child: CircularProgressIndicator());
+                        return const Center(
+                            child: CircularProgressIndicator.adaptive());
                       } else if (_poins.isEmpty) {
                         return const Center(
                           child: Text('No data available'),
@@ -218,7 +222,12 @@ class _FormKonselingEditState extends State<FormKonselingEdit>
                                       final poin = _poins[index];
                                       return RadioListTile<String>(
                                         title: Text(
-                                            '[${poin.nilai}]-${poin.deskripsi!}'),
+                                          '[${poin.nilai}]-${poin.deskripsi!}',
+                                          style: TextStyle(
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .tertiary),
+                                        ),
                                         value: poin.kodeScore!,
                                         groupValue: _selectedPoin,
                                         onChanged: (String? value) {
@@ -230,7 +239,8 @@ class _FormKonselingEditState extends State<FormKonselingEdit>
                                       );
                                     } else if (_isLoading) {
                                       return const Center(
-                                          child: CircularProgressIndicator());
+                                          child: CircularProgressIndicator
+                                              .adaptive());
                                     } else {
                                       return Container();
                                     }
@@ -244,7 +254,9 @@ class _FormKonselingEditState extends State<FormKonselingEdit>
                     },
                   );
                 },
-                child: Text(_selectedPoin ?? 'Pilih Jenis Poin'),
+                child: Text(_selectedPoin ?? 'Pilih Jenis Poin',
+                    style: TextStyle(
+                        color: Theme.of(context).colorScheme.tertiary)),
               ),
               const Divider(thickness: 0.1),
               SizedBox(
@@ -253,52 +265,53 @@ class _FormKonselingEditState extends State<FormKonselingEdit>
                 child: TextButton(
                   onPressed: () async {
                     final scaffold = ScaffoldMessenger.of(context);
-                    if (id != null && tokenss != null) {
-                      tokenss = tokenss?.substring(0, 30);
-                    }
-                    try {
-                      setState(() {
-                        isLoading = true;
-                      });
 
-                      await KonselingService().editKonseling(
-                        id: id!,
-                        tokenss: tokenss!,
-                        action: 'edit',
-                        kdKonseling: kdKonseling,
-                        nis: _selectedSiswa!,
-                        tanggal: inputDate,
-                        jam: inputTime,
-                        kasus: kasus.text,
-                        penanganan: penanganan.text,
-                        nilai: _selectedPoin!,
-                      );
-                      scaffold.showSnackBar(
-                        SnackBar(
-                          content: const Text('Berhasil di edit'),
-                          duration: const Duration(seconds: 1),
-                          behavior: SnackBarBehavior.floating,
-                          margin: EdgeInsets.only(
+                    try {
+                      if (id != null && tokenss != null) {
+                        setState(() {
+                          isLoading = true;
+                        });
+                        await KonselingService().editKonseling(
+                          id: id,
+                          tokenss: tokenss.substring(0, 30),
+                          action: 'edit',
+                          kdKonseling: kdKonseling,
+                          nis: _selectedSiswa!,
+                          tanggal: inputDate,
+                          jam: inputTime,
+                          kasus: kasus.text,
+                          penanganan: penanganan.text,
+                          nilai: _selectedPoin!,
+                        );
+                        scaffold.showSnackBar(
+                          SnackBar(
                             // ignore: use_build_context_synchronously
-                            bottom:
+                            backgroundColor:
                                 // ignore: use_build_context_synchronously
-                                MediaQuery.of(context).size.height - 150,
-                            left: 15,
-                            right: 15,
+                                Theme.of(context).colorScheme.primary,
+                            content: Text('Berhasil di edit',
+                                style: TextStyle(
+                                    // ignore: use_build_context_synchronously
+                                    color:
+                                        // ignore: use_build_context_synchronously
+                                        Theme.of(context)
+                                            .colorScheme
+                                            .onPrimary)),
                           ),
-                        ),
-                      );
-                      Future.delayed(const Duration(seconds: 2), () {
-                        context
-                            .read<KonselingProvider>()
-                            .refresh(id: id, tokenss: tokenss ?? '');
-                        Navigator.of(context).pop();
-                      });
-                      setState(() {
-                        isLoading = false;
-                      });
+                        );
+                        Future.delayed(const Duration(seconds: 1), () {
+                          // ignore: use_build_context_synchronously
+                          context.read<KonselingProvider>().refresh(
+                              id: id, tokenss: tokenss.substring(0, 30));
+                          // ignore: use_build_context_synchronously
+                          Navigator.of(context).pop();
+                        });
+                        setState(() {
+                          isLoading = false;
+                        });
+                      }
                     } catch (e) {
-                      throw Exception(e);
+                      return;
                     }
                   },
                   style: TextButton.styleFrom(
@@ -307,8 +320,8 @@ class _FormKonselingEditState extends State<FormKonselingEdit>
                     backgroundColor: const Color.fromARGB(255, 73, 72, 72),
                   ),
                   child: isLoading
-                      ? const CircularProgressIndicator(
-                          color: Colors.white,
+                      ? const CircularProgressIndicator.adaptive(
+                          backgroundColor: Colors.white,
                         )
                       : const Text(
                           'Simpan',

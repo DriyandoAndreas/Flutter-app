@@ -1,3 +1,4 @@
+//******* */ class GAC model
 class KelasModel {
   String? kodeKelas;
   String? namaKelas;
@@ -10,27 +11,27 @@ class KelasModel {
   String? kodePegawai;
 
   KelasModel({
-    required this.kodeKelas,
-    required this.namaKelas,
-    required this.active,
-    required this.noHp,
-    required this.penghuni,
-    required this.namaLengkap,
-    required this.waGroup,
-    required this.tahunAjaran,
-    required this.kodePegawai,
+     this.kodeKelas,
+     this.namaKelas,
+     this.active,
+     this.noHp,
+     this.penghuni,
+     this.namaLengkap,
+     this.waGroup,
+     this.tahunAjaran,
+     this.kodePegawai,
   });
   factory KelasModel.fromJson(Map<String, dynamic> json) {
     return KelasModel(
-      active: json['active'],
-      kodeKelas: json['kode_kelas'],
-      namaKelas: json['nama_kelas'],
-      namaLengkap: json['nama_lengkap'],
-      noHp: json['no_hp'],
-      penghuni: json['penghuni'],
-      waGroup: json['wagroup'],
-      tahunAjaran: json['tahun_ajaran'],
-      kodePegawai: json['kode_pegawai'],
+      active: json['active'] ?? '',
+      kodeKelas: json['kode_kelas'] ?? '',
+      namaKelas: json['nama_kelas'] ?? '',
+      namaLengkap: json['nama_lengkap'] ?? '',
+      noHp: json['no_hp'] ?? '',
+      penghuni: json['penghuni'] ?? '',
+      waGroup: json['wagroup'] ?? '',
+      tahunAjaran: json['tahun_ajaran'] ?? '',
+      kodePegawai: json['kode_pegawai'] ?? '',
     );
   }
   Map<String, dynamic> toJson() {
@@ -49,15 +50,15 @@ class KelasModel {
 }
 
 class KelasOpenModel {
-  String nis;
-  String namaLengkap;
+  String? nis;
+  String? namaLengkap;
 
-  KelasOpenModel({required this.nis, required this.namaLengkap});
+  KelasOpenModel({ this.nis,  this.namaLengkap});
 
   factory KelasOpenModel.fromJson(Map<String, dynamic> json) {
     return KelasOpenModel(
-      nis: json['nis'],
-      namaLengkap: json['nama_lengkap'],
+      nis: json['nis'] ?? '',
+      namaLengkap: json['nama_lengkap'] ?? '',
     );
   }
   Map<String, dynamic> toJson() {
@@ -65,5 +66,55 @@ class KelasOpenModel {
       'nis': nis,
       'nama_lengkap': namaLengkap,
     };
+  }
+}
+
+///************** */ class SAT model
+class KelasSatModel {
+  String? kodeKelas;
+  String? namaKelas;
+  String? penghuni;
+  String? namaLengkap;
+  String? kodePegawai;
+  String? waGroup;
+  String? tahunAjaran;
+  String? myclass;
+
+  KelasSatModel({
+    this.kodeKelas,
+    this.namaKelas,
+    this.penghuni,
+    this.namaLengkap,
+    this.kodePegawai,
+    this.waGroup,
+    this.tahunAjaran,
+    this.myclass,
+  });
+  factory KelasSatModel.fromJson(Map<String, dynamic> json) {
+    return KelasSatModel(
+      kodeKelas: json['kode_kelas'] ?? '',
+      namaKelas: json['nama_kelas'] ?? '',
+      namaLengkap: json['nama_lengkap'] ?? '',
+      kodePegawai: json['kode_pegawai'] ?? '',
+      waGroup: json['wagroup'] ?? '',
+      tahunAjaran: json['tahun_ajaran'] ?? '',
+      myclass: json['myclass'] ?? '',
+    );
+  }
+}
+
+class KelasSatOpenModel {
+  String? nis;
+  String? namalengkap;
+
+  KelasSatOpenModel({
+    this.nis,
+    this.namalengkap,
+  });
+  factory KelasSatOpenModel.fromJson(Map<String, dynamic> json) {
+    return KelasSatOpenModel(
+      nis: json['nis'] ?? '',
+      namalengkap: json['nama_lengkap'] ?? '',
+    );
   }
 }

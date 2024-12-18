@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:sisko_v5/providers/sqlite_user_provider.dart';
-import 'package:sisko_v5/widgets/palapa_button.dart';
-import 'package:sisko_v5/widgets/pengumuman.dart';
-import 'package:sisko_v5/widgets/playlist_mengajar.dart';
-import 'package:sisko_v5/widgets/teras_sekolah.dart';
-import 'package:sisko_v5/widgets/today_pengumuman_slider.dart';
+import 'package:app5/providers/referral_provider.dart';
+import 'package:app5/providers/sqlite_user_provider.dart';
+import 'package:app5/providers/user_connection_provider.dart';
+import 'package:app5/widgets/card_tagihan.dart';
+import 'package:app5/widgets/pengumuman.dart';
+import 'package:app5/widgets/playlist_belajar.dart';
+import 'package:app5/widgets/playlist_mengajar.dart';
+import 'package:app5/widgets/referral.dart';
+import 'package:app5/widgets/referral_dashboard.dart';
+import 'package:app5/widgets/teras_sekolah.dart';
+import 'package:app5/widgets/today_pengumuman_slider.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -15,25 +20,43 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  @override
+  void initState() {
+    super.initState();
+  }
+
   bool _isInit = true;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (_isInit) {
-      loadUser();
+      fetchData();
       _isInit = false;
     }
   }
 
-  // Inisialisasi data dari sqlite
-  void loadUser() async {
-    context.read<SqliteUserProvider>().fetchUser();
+  Future<void> fetchData() async {
+    await context.read<SqliteUserProvider>().fetchUser();
+    // ignore: use_build_context_synchronously
+    final user = Provider.of<SqliteUserProvider>(context, listen: false);
+    var id = user.currentuser.siskonpsn;
+    var tokenss = user.currentuser.tokenss;
+    final referraldashboard =
+        // ignore: use_build_context_synchronously
+        Provider.of<ReferralProvider>(context, listen: false);
+    if (id != null && tokenss != null) {
+      referraldashboard.getDashboard(id: id, tokenss: tokenss);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final user = Provider.of<SqliteUserProvider>(context);
+    final referral = Provider.of<ReferralProvider>(context);
+    final referraldashboard = Provider.of<ReferralProvider>(context);
+    referral.getReferral();
+
     getstatus(String? status) {
       switch (status) {
         case 'g':
@@ -54,10 +77,10 @@ class _HomePageState extends State<HomePage> {
     }
 
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
+      backgroundColor: Theme.of(context).colorScheme.surfaceContainer,
       appBar: AppBar(
-        surfaceTintColor: Theme.of(context).colorScheme.onPrimary,
         backgroundColor: Theme.of(context).colorScheme.onPrimary,
+        surfaceTintColor: Theme.of(context).colorScheme.onPrimary,
         leading: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -87,18 +110,6 @@ class _HomePageState extends State<HomePage> {
         actions: [
           GestureDetector(
             onTap: () {
-              Navigator.pushNamed(context, '/list-notifikasi');
-            },
-            child: const Icon(
-              Icons.notifications_active_rounded,
-              size: 30,
-            ),
-          ),
-          const SizedBox(
-            width: 8,
-          ),
-          GestureDetector(
-            onTap: () {
               Navigator.pushNamed(context, '/qr-scanner');
             },
             child: const Icon(
@@ -112,16 +123,67 @@ class _HomePageState extends State<HomePage> {
         ],
         automaticallyImplyLeading: false,
       ),
-      body: const SingleChildScrollView(
-        child: Column(
-          children: [
-            PalapaButton(),
-            PlaylistMengajar(),
-            TodayPengumumanSlider(),
-            Pengumuman(),
-            TerasSekolah(),
-          ],
-        ),
+      body: Consumer<UserConnectionProvider>(
+        builder: (context, provider, child) {
+          return RefreshIndicator(
+            onRefresh: fetchData,
+            child: provider.disconnected == true
+                ? Center(
+                    child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: TextButton(
+                      style: TextButton.styleFrom(
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadiusDirectional.circular(24)),
+                        backgroundColor: Colors.grey.shade800,
+                      ),
+                      onPressed: () {
+                        Navigator.pushNamed(context, '/join');
+                      },
+                      child: const Padding(
+                        padding: EdgeInsets.all(8.0),
+                        child: Text(
+                          'CONNNECT TO SCHOOL',
+                          style: TextStyle(fontSize: 24, color: Colors.white),
+                        ),
+                      ),
+                    ),
+                  ))
+                : SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        const SizedBox(
+                          height: 12,
+                        ),
+                        user.currentuser.siskostatuslogin == 's' ||
+                                user.currentuser.siskostatuslogin == 'a' ||
+                                user.currentuser.siskostatuslogin == 'i'
+                            ? const CardTagihan()
+                            : const SizedBox.shrink(),
+                        const SizedBox(
+                          height: 12,
+                        ),
+                        user.currentuser.siskostatuslogin == 's' ||
+                                user.currentuser.siskostatuslogin == 'a' ||
+                                user.currentuser.siskostatuslogin == 'i'
+                            ? const SatPlayListBelajar()
+                            : const PlaylistMengajar(),
+                        const TodayPengumumanSlider(),
+                        const Pengumuman(),
+                        const TerasSekolah(),
+                        referral.referral
+                            ? referraldashboard.referraldashboard.status == '1'
+                                ? const ReferralDashboard()
+                                : const Referral()
+                            : const SizedBox.shrink(),
+                        const SizedBox(
+                          height: 12,
+                        )
+                      ],
+                    ),
+                  ),
+          );
+        },
       ),
     );
   }

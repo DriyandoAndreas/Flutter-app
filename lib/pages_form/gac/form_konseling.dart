@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:sisko_v5/providers/konseling_provider.dart';
-import 'package:sisko_v5/providers/sqlite_user_provider.dart';
+import 'package:app5/providers/konseling_provider.dart';
+import 'package:app5/providers/sqlite_user_provider.dart';
 
 class FormKonseling extends StatefulWidget {
   const FormKonseling({super.key});
@@ -30,22 +30,22 @@ class _FormKonselingState extends State<FormKonseling> {
     try {
       await _loadKelas();
     } catch (e) {
-      throw Exception(e);
+      return;
     }
   }
 
   Future<void> _loadKelas() async {
     try {
       final user = Provider.of<SqliteUserProvider>(context, listen: false);
-      String? id = user.currentuser.siskoid;
+      String? id = user.currentuser.siskonpsn;
       String? tokenss = user.currentuser.tokenss;
-      if (id != null && tokenss != null) {
+      if (id!=null && tokenss != null) {
         context
             .read<KonselingProvider>()
             .initKelas(id: id, tokenss: tokenss.substring(0, 30));
       }
     } catch (e) {
-      throw Exception(e);
+      return;
     }
   }
 
@@ -59,7 +59,7 @@ class _FormKonselingState extends State<FormKonseling> {
   Future<void> _refreshList() async {
     try {
       final user = Provider.of<SqliteUserProvider>(context, listen: false);
-      String id = user.currentuser.siskoid ?? '';
+      String id = user.currentuser.siskonpsn ?? '';
       String tokenss = user.currentuser.tokenss ?? '';
       if (id != '' && tokenss != '') {
         context
@@ -67,7 +67,7 @@ class _FormKonselingState extends State<FormKonseling> {
             .refreshKelas(id: id, tokenss: tokenss.substring(0, 30));
       }
     } catch (e) {
-      throw Exception(e);
+      return;
     }
   }
 
@@ -99,7 +99,7 @@ class _FormKonselingState extends State<FormKonseling> {
       builder: (context, kelas, child) {
         if (kelas.listKelas.isEmpty) {
           return const Center(
-            child: CircularProgressIndicator(),
+            child: CircularProgressIndicator.adaptive(),
           );
         } else {
           return ListView.builder(

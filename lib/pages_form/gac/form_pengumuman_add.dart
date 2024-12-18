@@ -1,17 +1,19 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:app5/services/openai_service.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import 'package:sisko_v5/database/sqlite_helper.dart';
-import 'package:sisko_v5/models/sqlite_user_model.dart';
-import 'package:sisko_v5/providers/pengumuman_provider.dart';
-import 'package:sisko_v5/services/pengumuman_service.dart';
+import 'package:app5/database/sqlite_helper.dart';
+import 'package:app5/models/sqlite_user_model.dart';
+import 'package:app5/providers/pengumuman_provider.dart';
+import 'package:app5/providers/theme_switch_provider.dart';
+import 'package:app5/services/pengumuman_service.dart';
 
 class FormPengumuman extends StatefulWidget {
-  const FormPengumuman({Key? key}) : super(key: key);
+  const FormPengumuman({super.key});
 
   @override
   State<FormPengumuman> createState() => _FormPengumumanState();
@@ -32,10 +34,11 @@ class _FormPengumumanState extends State<FormPengumuman> {
   late SqLiteHelper _sqLiteHelper;
   late List<SqliteUserModel> _users = [];
 
+   final OpenAIService _openAIService = OpenAIService();
+  
   @override
   void initState() {
     super.initState();
-    // Provider.of<SqliteUserProvider>(context, listen: false).fetchUser();
     _sqLiteHelper = SqLiteHelper();
     _loadUsers();
   }
@@ -47,7 +50,7 @@ class _FormPengumumanState extends State<FormPengumuman> {
         _users = users;
       });
     } catch (e) {
-      throw Exception('Gagal mengambil data dari sqlite');
+      return;
     }
   }
 
@@ -57,6 +60,23 @@ class _FormPengumumanState extends State<FormPengumuman> {
       initialDate: selectedDate,
       firstDate: DateTime(2015, 8),
       lastDate: DateTime(2101),
+      builder: (context, child) {
+        return Theme(
+            data: ThemeData(
+                brightness: context.watch<ThemeSwitchProvider>().isDark
+                    ? Brightness.dark
+                    : Brightness.light,
+                colorScheme: context.watch<ThemeSwitchProvider>().isDark
+                    ? ColorScheme.dark(
+                        surface: Colors.grey.shade900, primary: Colors.white)
+                    : const ColorScheme.light(
+                        surface: Colors.white, primary: Colors.black),
+                dialogBackgroundColor:
+                    context.watch<ThemeSwitchProvider>().isDark
+                        ? Colors.black
+                        : Colors.white),
+            child: child!);
+      },
     );
     if (picked != null && picked != selectedDate) {
       setState(() {
@@ -64,11 +84,46 @@ class _FormPengumumanState extends State<FormPengumuman> {
       });
     }
   }
+  Future<void> _generateContent() async {
+    if (judul.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Judul tidak boleh kosong')),
+      );
+      return;
+    }
+
+    setState(() {
+      isloading = true;
+    });
+
+    try {
+      String prompt = "Buatkan saya konten tentang ${judul.text}.";
+      String content = await _openAIService.generateContent(prompt);
+
+      setState(() {
+        isi.text = content;
+      });
+
+      // ignore: use_build_context_synchronously
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Konten berhasil dihasilkan')),
+      );
+    } catch (e) {
+      // ignore: use_build_context_synchronously
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal menghasilkan konten: $e')),
+      );
+    } finally {
+      setState(() {
+        isloading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final currentUser = _users.isNotEmpty ? _users.first : null;
-    String? id = currentUser?.siskoid;
+    String? id = currentUser?.siskonpsn;
     String? tokenss = currentUser?.tokenss;
     final inputDate = DateFormat('yyyy-MM-dd').format(selectedDate);
     Future pickFromGallery() async {
@@ -154,15 +209,27 @@ class _FormPengumumanState extends State<FormPengumuman> {
                 thickness: 0.5,
               ),
               const Text('Isi'),
-              SizedBox(
-                height: 50,
-                child: TextFormField(
-                  controller: isi,
-                  decoration: const InputDecoration.collapsed(
-                      hintText: 'Isi',
-                      hintStyle: TextStyle(color: Colors.grey)),
-                ),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Expanded(
+                    child: SizedBox(
+                      height: 50,
+                      child: TextFormField(
+                        controller: isi,
+                        decoration: const InputDecoration.collapsed(
+                            hintText: 'Isi',
+                            hintStyle: TextStyle(color: Colors.grey)),
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: _generateContent,
+                    icon: const Icon(Icons.auto_awesome),
+                  ),
+                ],
               ),
+              
               const Divider(
                 thickness: 0.5,
               ),
@@ -230,7 +297,7 @@ class _FormPengumumanState extends State<FormPengumuman> {
                       // ignore: use_build_context_synchronously
                       final scaffold = ScaffoldMessenger.of(context);
 
-                      if (id != null && tokenss != null) {
+                      if (id!=null && tokenss != null) {
                         String guruValue = ischeckedGuru ? 'GR' : '';
                         String karyawanValue = ischeckedKaryawan ? 'KR' : '';
                         String siswaValue = ischeckedSis ? 'SIS' : '';
@@ -245,46 +312,42 @@ class _FormPengumumanState extends State<FormPengumuman> {
                         if (base64Image == null) {
                           scaffold.showSnackBar(
                             SnackBar(
-                              content: const Text('Gambar tidak boleh kosong'),
-                              duration: const Duration(seconds: 1),
-                              behavior: SnackBarBehavior.floating,
-                              margin: EdgeInsets.only(
-                                // ignore: use_build_context_synchronously
-                                bottom:
-                                    MediaQuery.of(context).size.height - 150,
-                                left: 15,
-                                right: 15,
+                              backgroundColor:
+                                  Theme.of(context).colorScheme.primary,
+                              content: Text(
+                                'Gambar tidak boleh kosong',
+                                style: TextStyle(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onPrimary),
                               ),
+                              //
                             ),
                           );
                         } else if (judul.text.isEmpty) {
                           scaffold.showSnackBar(
                             SnackBar(
-                              content: const Text('Judul tidak boleh kosong'),
-                              duration: const Duration(seconds: 1),
-                              behavior: SnackBarBehavior.floating,
-                              margin: EdgeInsets.only(
-                                // ignore: use_build_context_synchronously
-                                bottom:
-                                    MediaQuery.of(context).size.height - 150,
-                                left: 15,
-                                right: 15,
+                              backgroundColor:
+                                  Theme.of(context).colorScheme.primary,
+                              content: Text(
+                                'Judul tidak boleh kosong',
+                                style: TextStyle(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onPrimary),
                               ),
                             ),
                           );
                         } else if (isi.text.isEmpty) {
                           scaffold.showSnackBar(
                             SnackBar(
-                              content: const Text('Konten tidak boleh kosong'),
-                              duration: const Duration(seconds: 1),
-                              behavior: SnackBarBehavior.floating,
-                              margin: EdgeInsets.only(
-                                // ignore: use_build_context_synchronously
-                                bottom:
-                                    MediaQuery.of(context).size.height - 150,
-                                left: 15,
-                                right: 15,
-                              ),
+                              backgroundColor:
+                                  Theme.of(context).colorScheme.primary,
+                              content: Text('Konten tidak boleh kosong',
+                                  style: TextStyle(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onPrimary)),
                             ),
                           );
                         } else {
@@ -306,25 +369,25 @@ class _FormPengumumanState extends State<FormPengumuman> {
 
                           scaffold.showSnackBar(
                             SnackBar(
-                              content:
-                                  const Text('Pengumuman berhasil ditambahkan'),
-                              duration: const Duration(seconds: 1),
-                              behavior: SnackBarBehavior.floating,
-                              margin: EdgeInsets.only(
-                                // ignore: use_build_context_synchronously
-                                bottom:
-                                    // ignore: use_build_context_synchronously
-                                    MediaQuery.of(context).size.height - 150,
-                                left: 15,
-                                right: 15,
-                              ),
+                              // ignore: use_build_context_synchronously
+                              backgroundColor:
+                                  // ignore: use_build_context_synchronously
+                                  Theme.of(context).colorScheme.primary,
+                              content: Text('Pengumuman berhasil ditambahkan',
+                                  style: TextStyle(
+                                      // ignore: use_build_context_synchronously
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onPrimary)),
                             ),
                           );
                           // ignore: use_build_context_synchronously
-                          Future.delayed(const Duration(seconds: 2), () {
+                          Future.delayed(const Duration(seconds: 1), () {
+                            // ignore: use_build_context_synchronously
                             context
                                 .read<PengumumanProvider>()
                                 .refresh(id: id, tokenss: tokenss ?? '');
+                            // ignore: use_build_context_synchronously
                             Navigator.of(context).pop();
                           });
                           setState(() {
@@ -334,20 +397,19 @@ class _FormPengumumanState extends State<FormPengumuman> {
                       } else {
                         scaffold.showSnackBar(
                           SnackBar(
-                            content: const Text('Pengumuman gagal ditambahkan'),
-                            duration: const Duration(seconds: 1),
-                            behavior: SnackBarBehavior.floating,
-                            margin: EdgeInsets.only(
-                              // ignore: use_build_context_synchronously
-                              bottom: MediaQuery.of(context).size.height - 150,
-                              left: 15,
-                              right: 15,
-                            ),
+                            backgroundColor:
+                                Theme.of(context).colorScheme.primary,
+                            content: Text('Pengumuman gagal ditambahkan',
+                                style: TextStyle(
+                                    // ignore: use_build_context_synchronously
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onPrimary)),
                           ),
                         );
                       }
                     } catch (e) {
-                      throw Exception('$e');
+                      return;
                     }
                   },
                   style: TextButton.styleFrom(
@@ -356,8 +418,8 @@ class _FormPengumumanState extends State<FormPengumuman> {
                     backgroundColor: const Color.fromARGB(255, 73, 72, 72),
                   ),
                   child: isloading
-                      ? const CircularProgressIndicator(
-                          color: Colors.white,
+                      ? const CircularProgressIndicator.adaptive(
+                          backgroundColor: Colors.white,
                         )
                       : const Text(
                           'Simpan',

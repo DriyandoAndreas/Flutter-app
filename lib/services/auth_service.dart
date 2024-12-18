@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
-import 'package:sisko_v5/models/user_model.dart';
+import 'package:app5/models/user_model.dart';
 
 class AuthService {
   var apiPP = dotenv.env['API_URL_PAPALA'];
@@ -17,16 +17,13 @@ class AuthService {
       'hp': hp,
       'password': password,
     };
-
     var response = await http.post(
       url,
       headers: headers,
       body: body,
     );
-
     if (response.statusCode == 200) {
       var responseData = jsonDecode(response.body);
-      // print('respon dari api auth user: ${responseData.body}');
       var data = responseData['data'];
       UserModel user = UserModel(
         nama: data['nama'],
@@ -35,8 +32,11 @@ class AuthService {
         token: data['token'],
         tokenpp: data['tokenpp'],
         tokenss: data['tokenss'],
+        nomor: data['nomor'],
         siskohakakses: data['sisko_kode_hakakses'],
         emailUser: data['email_user'],
+        tglLahir: data['tgl_lahir'],
+        siskonamalengkap: data['nama_lengkap'],
         imgUrl: ImgUrl(
             photoThumb: data['img_url']['photo_thumb'],
             photo: data['img_url']['photo'],
@@ -46,6 +46,7 @@ class AuthService {
                   ['photo_default_thumb'],
             )),
       );
+
       return user;
     } else {
       throw Exception('Failed to login. Status code: ${response.statusCode}');

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:sisko_v5/models/konseling_model.dart';
+import 'package:app5/models/konseling_model.dart';
 
 class DetailKonseling extends StatefulWidget {
   const DetailKonseling({super.key});
@@ -34,6 +34,7 @@ class _DetailKonselingState extends State<DetailKonseling> {
         child: Container(
           padding: const EdgeInsets.all(16),
           child: Card(
+            color: Theme.of(context).colorScheme.onPrimary,
             child: Column(
               children: [
                 ClipRRect(
@@ -63,11 +64,15 @@ class _DetailKonselingState extends State<DetailKonseling> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(konseling.kasus!),
+                            Text(
+                              konseling.kasus!,
+                            ),
                             const SizedBox(
                               height: 8,
                             ),
-                            Text(konseling.penanganan!),
+                            Text(
+                              konseling.penanganan!,
+                            ),
                           ],
                         ),
                       ),
@@ -81,10 +86,16 @@ class _DetailKonselingState extends State<DetailKonseling> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(
-                              formatDate(konseling.tanggal!),
-                            ),
-                            Text(konseling.nilai!),
+                            Text(formatDate(konseling.tanggal!),
+                                style: TextStyle(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .tertiary)),
+                            Text(konseling.nilai!,
+                                style: TextStyle(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .tertiary)),
                           ],
                         ),
                       )

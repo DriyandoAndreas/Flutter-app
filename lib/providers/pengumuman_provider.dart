@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:sisko_v5/models/pengumuman_model.dart';
-import 'package:sisko_v5/services/pengumuman_service.dart';
+import 'package:app5/models/pengumuman_model.dart';
+import 'package:app5/services/pengumuman_service.dart';
 
 class PengumumanProvider with ChangeNotifier {
   List<PengumumanModel> _listpengumuman = [];
@@ -19,7 +19,7 @@ class PengumumanProvider with ChangeNotifier {
           id: id, tokenss: tokenss, limit: limit);
       notifyListeners();
     } catch (e) {
-      throw Exception(e);
+      return;
     }
   }
 
@@ -35,7 +35,7 @@ class PengumumanProvider with ChangeNotifier {
       _infinitelist = respon;
       notifyListeners();
     } catch (e) {
-      throw Exception(e);
+      return;
     }
   }
 
@@ -50,5 +50,11 @@ class PengumumanProvider with ChangeNotifier {
     _infinitelist = [];
     hasMore = true;
     await infiniteLoad(id: id, tokenss: tokenss);
+  }
+
+  Future<void> clearState() async {
+    _listpengumuman = [];
+    _infinitelist = [];
+    notifyListeners();
   }
 }

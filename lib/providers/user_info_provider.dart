@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:sisko_v5/models/user_info_model.dart';
-import 'package:sisko_v5/services/user_info_service.dart';
+import 'package:app5/models/user_info_model.dart';
+import 'package:app5/services/user_info_service.dart';
 
 class UserInfoProvider with ChangeNotifier {
   late InfoModel _userInfo = InfoModel();

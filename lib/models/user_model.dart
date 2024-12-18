@@ -157,82 +157,82 @@ class UserModel {
 
   UserModel.fromJson(Map<String, dynamic> json) {
     UserModel(
-      idUser: json['id_user'],
-      nomor: json['nomor'],
-      username: json['username'],
-      password: json['password'],
-      nomorSc: json['nomor_sc'],
-      position: json['position'],
-      cpos: json['cpos'],
-      photopp: json['photopp'],
-      nama: json['nama'],
-      kelamin: json['kelamin'],
-      email: json['email'],
-      join: json['join'],
-      lastLogin: json['last_login'],
-      siskoNpsn: json['sisko_npsn'],
-      siskoId: json['sisko_id'],
-      siskoKode: json['sisko_kode'],
-      siskoStatusLogin: json['sisko_status_login'],
-      siskoSiteName: json['sisko_site_name'],
-      verified: json['verified'],
-      activate: json['activate'],
-      jsonReturn: json['json_return'],
-      aktif: json['aktif'],
-      publish: json['publish'],
-      dec: json['dec'],
-      hex: json['hex'],
-      encrypted: json['encrypted'],
-      pwd: json['pwd'],
-      pwdChanged: json['pwd_changed'],
-      cpwd: json['cpwd'],
-      pin: json['pin'],
-      cpin: json['cpin'],
-      pinHide: json['pin_hide'],
-      parent: json['parent'],
-      time: json['time'],
-      timestamp: json['timestamp'],
-      reqId: json['req_id'],
-      cuid: json['cuid'],
-      cuname: json['cuname'],
-      cmerchant: json['cmerchant'],
-      emailUser: json['email_user'],
-      hp: json['hp'],
-      isOrtu: json['is_ortu'],
-      npsn: json['npsn'],
-      id: json['id'],
-      kode: json['kode'],
-      statusLogin: json['status_login'],
-      jkelamin: json['jkelamin'],
-      datetimeReg: json['datetime_reg'],
-      sscode: json['sscode'],
-      sstoken: json['sstoken'],
-      tglLahir: json['tgl_lahir'],
-      alamat: json['alamat'],
-      idKota: json['id_kota'],
-      kodePos: json['kode_pos'],
-      telp: json['telp'],
-      idSekolah: json['id_sekolah'],
-      kelas: json['kelas'],
-      noInduk: json['no_induk'],
-      web: json['web'],
+      idUser: json['id_user'] ?? '',
+      nomor: json['nomor'] ?? '',
+      username: json['username'] ?? '',
+      password: json['password'] ?? '',
+      nomorSc: json['nomor_sc'] ?? '',
+      position: json['position'] ?? '',
+      cpos: json['cpos'] ?? '',
+      photopp: json['photopp'] ?? '',
+      nama: json['nama'] ?? '',
+      kelamin: json['kelamin'] ?? '',
+      email: json['email'] ?? '',
+      join: json['join'] ?? '',
+      lastLogin: json['last_login'] ?? '',
+      siskoNpsn: json['sisko_npsn'] ?? '',
+      siskoId: json['sisko_id'] ?? '',
+      siskoKode: json['sisko_kode'] ?? '',
+      siskoStatusLogin: json['sisko_status_login'] ?? '',
+      siskoSiteName: json['sisko_site_name'] ?? '',
+      verified: json['verified'] ?? '',
+      activate: json['activate'] ?? '',
+      jsonReturn: json['json_return'] ?? '',
+      aktif: json['aktif'] ?? '',
+      publish: json['publish'] ?? '',
+      dec: json['dec'] ?? '',
+      hex: json['hex'] ?? '',
+      encrypted: json['encrypted'] ?? '',
+      pwd: json['pwd'] ?? '',
+      pwdChanged: json['pwd_changed'] ?? '',
+      cpwd: json['cpwd'] ?? '',
+      pin: json['pin'] ?? '',
+      cpin: json['cpin'] ?? '',
+      pinHide: json['pin_hide'] ?? '',
+      parent: json['parent'] ?? '',
+      time: json['time'] ?? '',
+      timestamp: json['timestamp'] ?? '',
+      reqId: json['req_id'] ?? '',
+      cuid: json['cuid'] ?? '',
+      cuname: json['cuname'] ?? '',
+      cmerchant: json['cmerchant'] ?? '',
+      emailUser: json['email_user'] ?? '',
+      hp: json['hp'] ?? '',
+      isOrtu: json['is_ortu'] ?? '',
+      npsn: json['npsn'] ?? '',
+      id: json['id'] ?? '',
+      kode: json['kode'] ?? '',
+      statusLogin: json['status_login'] ?? '',
+      jkelamin: json['jkelamin'] ?? '',
+      datetimeReg: json['datetime_reg'] ?? '',
+      sscode: json['sscode'] ?? '',
+      sstoken: json['sstoken'] ?? '',
+      tglLahir: json['tgl_lahir'] ?? '',
+      alamat: json['alamat'] ?? '',
+      idKota: json['id_kota'] ?? '',
+      kodePos: json['kode_pos'] ?? '',
+      telp: json['telp'] ?? '',
+      idSekolah: json['id_sekolah'] ?? '',
+      kelas: json['kelas'] ?? '',
+      noInduk: json['no_induk'] ?? '',
+      web: json['web'] ?? '',
       imgUrl: ImgUrl.fromJson(json['img_url']),
-      siskodomainssl: json['sisko_domain_ssl'],
-      siskodomainpmt: json['sisko_domain_pmt'],
-      siskodomain: json['sisko_dimain'],
-      siskoclaim: json['sisko_klaim'],
-      siskosite: json['sisko_site'],
-      siskoentity: json['sisko_entity'],
-      siskojjg: json['sisko_jjg'],
-      siskoversi: json['sisko_versi'],
-      siskoexpired: json['siski_expired'],
-      siskotgllahir: json['sisko_tgl_lhr'],
-      siskonamalengkap: json['sisko_nama_lengkap'],
-      siskohakakses: json['sisko_kode_hakakses'],
-      ip: json['ip'],
-      token: json['token'],
-      tokenss: json['tokenss'],
-      tokenpp: json['tokenpp'],
+      siskodomainssl: json['sisko_domain_ssl'] ?? '',
+      siskodomainpmt: json['sisko_domain_pmt'] ?? '',
+      siskodomain: json['sisko_dimain'] ?? '',
+      siskoclaim: json['sisko_klaim'] ?? '',
+      siskosite: json['sisko_site'] ?? '',
+      siskoentity: json['sisko_entity'] ?? '',
+      siskojjg: json['sisko_jjg'] ?? '',
+      siskoversi: json['sisko_versi'] ?? '',
+      siskoexpired: json['siski_expired'] ?? '',
+      siskotgllahir: json['sisko_tgl_lhr'] ?? '',
+      siskonamalengkap: json['sisko_nama_lengkap'] ?? '',
+      siskohakakses: json['sisko_kode_hakakses'] ?? '',
+      ip: json['ip'] ?? '',
+      token: json['token'] ?? '',
+      tokenss: json['tokenss'] ?? '',
+      tokenpp: json['tokenpp'] ?? '',
     );
   }
   Map<String, dynamic> toJson() {
@@ -370,5 +370,75 @@ class PhotoPp {
       'photo_default': photoDefault,
       'photo_default_thumb': photoDefaultThumb
     };
+  }
+}
+
+class RegisterNumberAt {
+  String? idsekolah;
+  String? kodepegawai;
+  String? nip;
+  String? nis;
+  String? nisn;
+  String? namalengkap;
+  String? npsn;
+  String? schoolname;
+  String? sebagai;
+  String? sebagailabel;
+
+  RegisterNumberAt({
+    this.idsekolah,
+    this.kodepegawai,
+    this.namalengkap,
+    this.nip,
+    this.nis,
+    this.nisn,
+    this.npsn,
+    this.schoolname,
+    this.sebagai,
+    this.sebagailabel,
+  });
+
+  factory RegisterNumberAt.fromJson(Map<String, dynamic> json) {
+    return RegisterNumberAt(
+      idsekolah: json['id_schools'] ?? '',
+      kodepegawai: json['kode_pegawai'] ?? '',
+      nip: json['nip'] ?? '',
+      nis: json['nis'] ?? '',
+      nisn: json['nisn'] ?? '',
+      namalengkap: json['nama_lengkap'] ?? '',
+      npsn: json['npsn'] ?? '',
+      schoolname: json['school_name'] ?? '',
+      sebagai: json['_sbg'] ?? '',
+      sebagailabel: json['_sbg_label'] ?? '',
+    );
+  }
+}
+
+class UserJoinData {
+  String? siskoid;
+  String? siskonpsn;
+  String? siskokode;
+  String? siskostatuslogin;
+  String? siskonamalengkap;
+  String? kelas;
+
+  UserJoinData({
+    this.siskoid,
+    this.siskonpsn,
+    this.siskokode,
+    this.siskostatuslogin,
+    this.siskonamalengkap,
+    this.kelas,
+  });
+
+  factory UserJoinData.fromJson(Map<String, dynamic> json) {
+    return UserJoinData(
+      siskoid: json['id_user'] ?? '',
+      siskonpsn: json['sisko_npsn'] ?? '',
+      siskokode: json['sisko_kode'] ?? '',
+      siskostatuslogin: json['sisko_status_login'] ?? '',
+      siskonamalengkap: json['sisko_nama_lengkap'] ?? '',
+      kelas: json['kelas'] ?? '',
+    );
   }
 }

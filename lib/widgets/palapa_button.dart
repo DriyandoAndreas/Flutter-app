@@ -7,6 +7,7 @@ class PalapaButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return buttonGroup();
   }
+
   Widget buttonGroup() {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
@@ -119,7 +120,7 @@ class PalapaButton extends StatelessWidget {
               child: SizedBox(
                 width: 85,
                 child: Container(
-                  color: Colors.grey.shade400,
+                  color: Colors.grey.shade600,
                   padding: const EdgeInsets.all(10),
                   child: const Column(
                     children: [
@@ -146,5 +147,4 @@ class PalapaButton extends StatelessWidget {
       ),
     );
   }
-
 }

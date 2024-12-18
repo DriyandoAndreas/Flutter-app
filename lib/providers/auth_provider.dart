@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:sisko_v5/models/user_model.dart';
-import 'package:sisko_v5/services/auth_service.dart';
+import 'package:app5/models/user_model.dart';
+import 'package:app5/services/auth_service.dart';
 
 class AuthProvider with ChangeNotifier {
   late UserModel _userModels = UserModel();

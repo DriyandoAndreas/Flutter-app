@@ -4,11 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import 'package:sisko_v5/database/sqlite_helper.dart';
-import 'package:sisko_v5/models/pengumuman_model.dart';
-import 'package:sisko_v5/models/sqlite_user_model.dart';
-import 'package:sisko_v5/providers/pengumuman_provider.dart';
-import 'package:sisko_v5/services/pengumuman_service.dart';
+import 'package:app5/database/sqlite_helper.dart';
+import 'package:app5/models/pengumuman_model.dart';
+import 'package:app5/models/sqlite_user_model.dart';
+import 'package:app5/providers/pengumuman_provider.dart';
+import 'package:app5/services/pengumuman_service.dart';
 
 class FormEditPengumuman extends StatefulWidget {
   const FormEditPengumuman({super.key});
@@ -47,7 +47,7 @@ class _FormEditPengumumanState extends State<FormEditPengumuman> {
         _users = users;
       });
     } catch (e) {
-      throw Exception('Gagal mengambil data dari sqlite');
+      return;
     }
   }
 
@@ -84,7 +84,7 @@ class _FormEditPengumumanState extends State<FormEditPengumuman> {
   @override
   Widget build(BuildContext context) {
     final currentUser = _users.isNotEmpty ? _users.first : null;
-    String? id = currentUser?.siskoid;
+    String? id = currentUser?.siskonpsn;
     String? tokenss = currentUser?.tokenss;
     final inputDate = DateFormat('yyyy-MM-dd').format(selectedDate);
 
@@ -126,7 +126,12 @@ class _FormEditPengumumanState extends State<FormEditPengumuman> {
                                 padding: const EdgeInsets.all(10),
                                 child: Image.file(_selectedImage!),
                               )
-                            : Image.network(pengumuman.image!)),
+                            : Image.network(
+                                pengumuman.image!,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return const Icon(Icons.image);
+                                },
+                              )),
                   ),
                 ),
               ),
@@ -242,7 +247,7 @@ class _FormEditPengumumanState extends State<FormEditPengumuman> {
                       // ignore: use_build_context_synchronously
                       final scaffold = ScaffoldMessenger.of(context);
 
-                      if (id != null && tokenss != null) {
+                      if (id!=null && tokenss != null) {
                         String guruValue = ischeckedGuru ? 'GR' : '';
                         String karyawanValue = ischeckedKaryawan ? 'KR' : '';
                         String siswaValue = ischeckedSis ? 'SIS' : '';
@@ -257,31 +262,29 @@ class _FormEditPengumumanState extends State<FormEditPengumuman> {
                         if (judul.text.isEmpty) {
                           scaffold.showSnackBar(
                             SnackBar(
-                              content: const Text('Judul tidak boleh kosong'),
-                              duration: const Duration(seconds: 1),
-                              behavior: SnackBarBehavior.floating,
-                              margin: EdgeInsets.only(
-                                // ignore: use_build_context_synchronously
-                                bottom:
-                                    MediaQuery.of(context).size.height - 150,
-                                left: 15,
-                                right: 15,
-                              ),
+                              backgroundColor:
+                                  // ignore: use_build_context_synchronously
+                                  Theme.of(context).colorScheme.primary,
+                              content: Text('Judul tidak boleh kosong',
+                                  style: TextStyle(
+                                      // ignore: use_build_context_synchronously
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onPrimary)),
                             ),
                           );
                         } else if (isi.text.isEmpty) {
                           scaffold.showSnackBar(
                             SnackBar(
-                              content: const Text('Konten tidak boleh kosong'),
-                              duration: const Duration(seconds: 1),
-                              behavior: SnackBarBehavior.floating,
-                              margin: EdgeInsets.only(
-                                // ignore: use_build_context_synchronously
-                                bottom:
-                                    MediaQuery.of(context).size.height - 150,
-                                left: 15,
-                                right: 15,
-                              ),
+                              backgroundColor:
+                                  // ignore: use_build_context_synchronously
+                                  Theme.of(context).colorScheme.primary,
+                              content: Text('Konten tidak boleh kosong',
+                                  style: TextStyle(
+                                      // ignore: use_build_context_synchronously
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onPrimary)),
                             ),
                           );
                         } else {
@@ -305,25 +308,24 @@ class _FormEditPengumumanState extends State<FormEditPengumuman> {
 
                           scaffold.showSnackBar(
                             SnackBar(
-                              content:
-                                  const Text('Pengumuman berhasil di edit'),
-                              duration: const Duration(seconds: 1),
-                              behavior: SnackBarBehavior.floating,
-                              margin: EdgeInsets.only(
-                                // ignore: use_build_context_synchronously
-                                bottom:
-                                    // ignore: use_build_context_synchronously
-                                    MediaQuery.of(context).size.height - 150,
-                                left: 15,
-                                right: 15,
-                              ),
+                              backgroundColor:
+                                  // ignore: use_build_context_synchronously
+                                  Theme.of(context).colorScheme.primary,
+                              content: Text('Pengumuman berhasil di edit',
+                                  style: TextStyle(
+                                      // ignore: use_build_context_synchronously
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onPrimary)),
                             ),
                           );
                           // ignore: use_build_context_synchronously
-                          Future.delayed(const Duration(seconds: 2), () {
+                          Future.delayed(const Duration(seconds: 1), () {
+                            // ignore: use_build_context_synchronously
                             context
                                 .read<PengumumanProvider>()
                                 .refresh(id: id, tokenss: tokenss ?? '');
+                            // ignore: use_build_context_synchronously
                             Navigator.of(context).pop();
                           });
                           setState(() {
@@ -333,20 +335,20 @@ class _FormEditPengumumanState extends State<FormEditPengumuman> {
                       } else {
                         scaffold.showSnackBar(
                           SnackBar(
-                            content: const Text('Pengumuman gagal di edit'),
-                            duration: const Duration(seconds: 1),
-                            behavior: SnackBarBehavior.floating,
-                            margin: EdgeInsets.only(
-                              // ignore: use_build_context_synchronously
-                              bottom: MediaQuery.of(context).size.height - 150,
-                              left: 15,
-                              right: 15,
-                            ),
+                            backgroundColor:
+                                // ignore: use_build_context_synchronously
+                                Theme.of(context).colorScheme.primary,
+                            content: Text('Pengumuman gagal di edit',
+                                style: TextStyle(
+                                    // ignore: use_build_context_synchronously
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onPrimary)),
                           ),
                         );
                       }
                     } catch (e) {
-                      throw Exception('$e');
+                      return;
                     }
                   },
                   style: TextButton.styleFrom(
@@ -355,8 +357,8 @@ class _FormEditPengumumanState extends State<FormEditPengumuman> {
                     backgroundColor: const Color.fromARGB(255, 73, 72, 72),
                   ),
                   child: isloading
-                      ? const CircularProgressIndicator(
-                          color: Colors.white,
+                      ? const CircularProgressIndicator.adaptive(
+                          backgroundColor: Colors.white,
                         )
                       : const Text(
                           'Simpan',

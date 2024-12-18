@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import 'package:sisko_v5/models/konseling_model.dart';
-import 'package:sisko_v5/providers/kelas_provider.dart';
-import 'package:sisko_v5/providers/konseling_provider.dart';
-import 'package:sisko_v5/providers/sqlite_user_provider.dart';
-import 'package:sisko_v5/services/konseling_service.dart';
+import 'package:app5/models/konseling_model.dart';
+import 'package:app5/providers/kelas_provider.dart';
+import 'package:app5/providers/konseling_provider.dart';
+import 'package:app5/providers/sqlite_user_provider.dart';
+import 'package:app5/providers/theme_switch_provider.dart';
+import 'package:app5/services/konseling_service.dart';
 
 class FormKonselingAdd extends StatefulWidget {
   const FormKonselingAdd({super.key});
@@ -42,7 +43,7 @@ class _FormKonselingAddState extends State<FormKonselingAdd> {
     super.didChangeDependencies();
     if (_isInit) {
       initdata();
-      _isInit = false; // Set boolean ke false setelah inisialisasi
+      _isInit = false;
     }
   }
 
@@ -73,6 +74,23 @@ class _FormKonselingAddState extends State<FormKonselingAdd> {
       initialDate: DateTime.now(),
       firstDate: DateTime(2000),
       lastDate: DateTime(2101),
+      builder: (context, child) {
+        return Theme(
+            data: ThemeData(
+                brightness: context.watch<ThemeSwitchProvider>().isDark
+                    ? Brightness.dark
+                    : Brightness.light,
+                colorScheme: context.watch<ThemeSwitchProvider>().isDark
+                    ? ColorScheme.dark(
+                        surface: Colors.grey.shade900, primary: Colors.white)
+                    : const ColorScheme.light(
+                        surface: Colors.white, primary: Colors.black),
+                dialogBackgroundColor:
+                    context.watch<ThemeSwitchProvider>().isDark
+                        ? Colors.black
+                        : Colors.white),
+            child: child!);
+      },
     );
     if (picked != null && picked != _selectedDate) {
       setState(() {
@@ -85,6 +103,23 @@ class _FormKonselingAddState extends State<FormKonselingAdd> {
     final TimeOfDay? picked = await showTimePicker(
       context: context,
       initialTime: TimeOfDay.now(),
+      builder: (context, child) {
+        return Theme(
+            data: ThemeData(
+                brightness: context.watch<ThemeSwitchProvider>().isDark
+                    ? Brightness.dark
+                    : Brightness.light,
+                colorScheme: context.watch<ThemeSwitchProvider>().isDark
+                    ? ColorScheme.dark(
+                        surface: Colors.grey.shade900, primary: Colors.white)
+                    : const ColorScheme.light(
+                        surface: Colors.white, primary: Colors.black),
+                dialogBackgroundColor:
+                    context.watch<ThemeSwitchProvider>().isDark
+                        ? Colors.black
+                        : Colors.white),
+            child: child!);
+      },
     );
     if (picked != null && picked != _selectedTime) {
       setState(() {
@@ -108,9 +143,9 @@ class _FormKonselingAddState extends State<FormKonselingAdd> {
   Future<void> loadListkelas(String kodeKelas) async {
     try {
       final user = Provider.of<SqliteUserProvider>(context, listen: false);
-      String? id = user.currentuser.siskoid;
+      String? id = user.currentuser.siskonpsn;
       String? tokenss = user.currentuser.tokenss;
-      if (id != null && tokenss != null) {
+      if (id!=null && tokenss != null) {
         if (ModalRoute.of(context)!.settings.arguments != null) {
           ShowKelasModel kelas =
               // ignore: use_build_context_synchronously
@@ -124,23 +159,23 @@ class _FormKonselingAddState extends State<FormKonselingAdd> {
         }
       }
     } catch (e) {
-      throw Exception(e);
+      return;
     }
   }
 
   Future<void> loadPoin() async {
     try {
       final user = Provider.of<SqliteUserProvider>(context, listen: false);
-      String? id = user.currentuser.siskoid;
+      String? id = user.currentuser.siskonpsn;
       String? tokenss = user.currentuser.tokenss;
-      if (id != null && tokenss != null) {
+      if (id!=null && tokenss != null) {
         context.read<KonselingProvider>().initPoin(
               id: id,
               tokenss: tokenss.substring(0, 30),
             );
       }
     } catch (e) {
-      throw Exception(e);
+      return;
     }
   }
 
@@ -159,6 +194,7 @@ class _FormKonselingAddState extends State<FormKonselingAdd> {
 
   void _showSiswaModal() {
     showModalBottomSheet(
+      backgroundColor: Theme.of(context).colorScheme.primaryFixed,
       context: context,
       builder: (BuildContext context) {
         return Container(
@@ -171,7 +207,7 @@ class _FormKonselingAddState extends State<FormKonselingAdd> {
                   builder: (context, kelasOpen, child) {
                     if (kelasOpen.infiniteListKelasOpen.isEmpty) {
                       return const Center(
-                        child: CircularProgressIndicator(),
+                        child: CircularProgressIndicator.adaptive(),
                       );
                     } else {
                       return ListView.builder(
@@ -182,7 +218,7 @@ class _FormKonselingAddState extends State<FormKonselingAdd> {
                           final siswa = kelasOpen.infiniteListKelasOpen[index];
                           return RadioListTile<String>(
                             title: Text('[${siswa.nis}] ${siswa.namaLengkap}'),
-                            value: siswa.nis,
+                            value: siswa.nis ?? '',
                             groupValue: _selectedSiswa,
                             onChanged: (value) {
                               setState(() {
@@ -206,6 +242,7 @@ class _FormKonselingAddState extends State<FormKonselingAdd> {
 
   void _showPoin() {
     showModalBottomSheet(
+      backgroundColor: Theme.of(context).colorScheme.primaryFixed,
       context: context,
       builder: (BuildContext context) {
         return Container(
@@ -218,7 +255,7 @@ class _FormKonselingAddState extends State<FormKonselingAdd> {
                   builder: (context, poin, child) {
                     if (poin.listPoin.isEmpty) {
                       return const Center(
-                        child: CircularProgressIndicator(),
+                        child: CircularProgressIndicator.adaptive(),
                       );
                     } else {
                       return ListView.builder(
@@ -252,7 +289,7 @@ class _FormKonselingAddState extends State<FormKonselingAdd> {
   @override
   Widget build(BuildContext context) {
     final user = Provider.of<SqliteUserProvider>(context, listen: false);
-    String? id = user.currentuser.siskoid;
+    String? id = user.currentuser.siskonpsn;
     String? tokenss = user.currentuser.tokenss;
     return Scaffold(
       appBar: AppBar(
@@ -339,53 +376,159 @@ class _FormKonselingAddState extends State<FormKonselingAdd> {
                   width: double.infinity,
                   child: TextButton(
                     onPressed: () async {
-                      final scaffold = ScaffoldMessenger.of(context);
-                      if (id != null && tokenss != null) {
-                        tokenss = tokenss?.substring(0, 30);
-                      }
                       try {
-                        setState(() {
-                          isLoading = true;
-                        });
-                        await KonselingService().addKonseling(
-                          id: id!,
-                          tokenss: tokenss!,
-                          action: 'add',
-                          tanggal: _formatDate(_selectedDate),
-                          jam: _formatTime(_selectedTime),
-                          nis: _selectedSiswa!,
-                          kasus: kasus.text,
-                          penanganan: penanganan.text,
-                          nilai: _selectedPoin!,
-                        );
-                        scaffold.showSnackBar(
-                          SnackBar(
-                            content: const Text('Berhasil disimpan'),
-                            duration: const Duration(seconds: 1),
-                            behavior: SnackBarBehavior.floating,
-                            margin: EdgeInsets.only(
+                        final scaffold = ScaffoldMessenger.of(context);
+                        if (id!=null && tokenss != null) {
+                          if (_selectedDate == null) {
+                            scaffold.showSnackBar(
+                              SnackBar(
+                                // ignore: use_build_context_synchronously
+                                backgroundColor:
+                                    // ignore: use_build_context_synchronously
+                                    Theme.of(context).colorScheme.primary,
+                                content: Text('Tanggal tidak boleh kosong',
+                                    style: TextStyle(
+                                        // ignore: use_build_context_synchronously
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onPrimary)),
+                              ),
+                            );
+                          } else if (_selectedTime == null) {
+                            scaffold.showSnackBar(
+                              SnackBar(
+                                // ignore: use_build_context_synchronously
+                                backgroundColor:
+                                    // ignore: use_build_context_synchronously
+                                    Theme.of(context).colorScheme.primary,
+                                content: Text('Waktu tidak boleh kosong',
+                                    style: TextStyle(
+                                        // ignore: use_build_context_synchronously
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onPrimary)),
+                              ),
+                            );
+                          } else if (_selectedSiswa == null) {
+                            scaffold.showSnackBar(
+                              SnackBar(
+                                // ignore: use_build_context_synchronously
+                                backgroundColor:
+                                    // ignore: use_build_context_synchronously
+                                    Theme.of(context).colorScheme.primary,
+                                content: Text('Silahkan pilh siswa',
+                                    style: TextStyle(
+                                        // ignore: use_build_context_synchronously
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onPrimary)),
+                              ),
+                            );
+                          } else if (kasus.text.isEmpty) {
+                            scaffold.showSnackBar(
+                              SnackBar(
+                                // ignore: use_build_context_synchronously
+                                backgroundColor:
+                                    // ignore: use_build_context_synchronously
+                                    Theme.of(context).colorScheme.primary,
+                                content: Text(
+                                    'Permasalahan/Prestasi tidak boleh kosong',
+                                    style: TextStyle(
+                                        // ignore: use_build_context_synchronously
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onPrimary)),
+                              ),
+                            );
+                          } else if (penanganan.text.isEmpty) {
+                            scaffold.showSnackBar(
+                              SnackBar(
+                                // ignore: use_build_context_synchronously
+                                backgroundColor:
+                                    // ignore: use_build_context_synchronously
+                                    Theme.of(context).colorScheme.primary,
+                                content: Text('Penanganan tidak boleh kosong',
+                                    style: TextStyle(
+                                        // ignore: use_build_context_synchronously
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onPrimary)),
+                              ),
+                            );
+                          } else if (_selectedPoin == null) {
+                            scaffold.showSnackBar(
+                              SnackBar(
+                                // ignore: use_build_context_synchronously
+                                backgroundColor:
+                                    // ignore: use_build_context_synchronously
+                                    Theme.of(context).colorScheme.primary,
+                                content: Text(
+                                    'Silahkan pilih poin terlebih dahulu',
+                                    style: TextStyle(
+                                        // ignore: use_build_context_synchronously
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onPrimary)),
+                              ),
+                            );
+                          } else {
+                            setState(() {
+                              isLoading = true;
+                            });
+                            await KonselingService().addKonseling(
+                              id: id,
+                              tokenss: tokenss.substring(0, 30),
+                              action: 'add',
+                              tanggal: _formatDate(_selectedDate),
+                              jam: _formatTime(_selectedTime),
+                              nis: _selectedSiswa!,
+                              kasus: kasus.text,
+                              penanganan: penanganan.text,
+                              nilai: _selectedPoin!,
+                            );
+                            scaffold.showSnackBar(
+                              SnackBar(
+                                // ignore: use_build_context_synchronously
+                                backgroundColor:
+                                    // ignore: use_build_context_synchronously
+                                    Theme.of(context).colorScheme.primary,
+                                content: Text('Berhasil disimpan',
+                                    style: TextStyle(
+                                        // ignore: use_build_context_synchronously
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onPrimary)),
+                              ),
+                            );
+                            Future.delayed(const Duration(seconds: 1), () {
                               // ignore: use_build_context_synchronously
-                              bottom:
-                                  // ignore: use_build_context_synchronously
-                                  MediaQuery.of(context).size.height - 150,
-                              left: 15,
-                              right: 15,
+                              context.read<KonselingProvider>().refresh(
+                                  id: id, tokenss: tokenss.substring(0, 30));
+                              // ignore: use_build_context_synchronously
+                              Navigator.of(context)
+                                ..pop()
+                                ..pop();
+                            });
+                            setState(() {
+                              isLoading = false;
+                            });
+                          }
+                        } else {
+                          scaffold.showSnackBar(
+                            SnackBar(
+                              backgroundColor:
+                                  Theme.of(context).colorScheme.primary,
+                              content: Text('Berita gagal ditambahkan',
+                                  style: TextStyle(
+                                      // ignore: use_build_context_synchronously
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onPrimary)),
                             ),
-                          ),
-                        );
-                        Future.delayed(const Duration(seconds: 2), () {
-                          context
-                              .read<KonselingProvider>()
-                              .refresh(id: id, tokenss: tokenss ?? '');
-                          Navigator.of(context)
-                            ..pop()
-                            ..pop();
-                        });
-                        setState(() {
-                          isLoading = false;
-                        });
+                          );
+                        }
                       } catch (e) {
-                        throw Exception(e);
+                        return;
                       }
                     },
                     style: TextButton.styleFrom(
@@ -394,8 +537,8 @@ class _FormKonselingAddState extends State<FormKonselingAdd> {
                       backgroundColor: const Color.fromARGB(255, 73, 72, 72),
                     ),
                     child: isLoading
-                        ? const CircularProgressIndicator(
-                            color: Colors.white,
+                        ? const CircularProgressIndicator.adaptive(
+                            backgroundColor: Colors.white,
                           )
                         : const Text(
                             'Simpan',

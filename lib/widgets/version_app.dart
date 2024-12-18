@@ -1,32 +1,52 @@
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
-class VersionApp extends StatelessWidget {
+class VersionApp extends StatefulWidget {
   const VersionApp({super.key});
 
   @override
+  State<VersionApp> createState() => _VersionAppState();
+}
+
+class _VersionAppState extends State<VersionApp> {
+  String _appVersion = '';
+  @override
+  void initState() {
+    super.initState();
+    _loadAppVersion();
+  }
+
+  Future<void> _loadAppVersion() async {
+    final packageInfo = await PackageInfo.fromPlatform();
+    setState(() {
+      _appVersion = packageInfo.version;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return const Column(
+    return Column(
       children: [
-        SizedBox(
+        const SizedBox(
           height: 12,
         ),
-        Center(
+        const Center(
           child: Text('Powered by'),
         ),
-        SizedBox(
+        const SizedBox(
           height: 12,
         ),
-        Center(
+        const Center(
           child: Text(
             'KAMADEVA',
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
           ),
         ),
-        SizedBox(
+        const SizedBox(
           height: 12,
         ),
         Center(
-          child: Text('5.0'),
+          child: Text(_appVersion),
         ),
       ],
     );

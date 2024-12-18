@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
-import 'package:sisko_v5/models/user_info_model.dart';
+import 'package:app5/models/user_info_model.dart';
 
 class UserInfo {
   var apiPP = dotenv.env['API_URL_PAPALA'];
@@ -45,8 +45,7 @@ class UserInfo {
       );
       return userInfo;
     } else {
-      throw Exception(
-          'Failed to get user info. Status code: ${response.statusCode}');
+      return InfoModel();
     }
   }
 }

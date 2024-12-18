@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
-import 'package:sisko_v5/database/sqlite_helper.dart';
-import 'package:sisko_v5/models/sqlite_user_model.dart';
+import 'package:app5/database/sqlite_helper.dart';
+import 'package:app5/models/sqlite_user_model.dart';
 
 class SqliteUserProvider with ChangeNotifier {
   late SqliteUserModel _currentuser = SqliteUserModel();
@@ -18,5 +18,11 @@ class SqliteUserProvider with ChangeNotifier {
       _currentuser = users.first;
       notifyListeners();
     }
+  }
+
+  Future<void> clearState() async {
+    SqliteUserModel data = SqliteUserModel();
+    _currentuser = data;
+    notifyListeners();
   }
 }

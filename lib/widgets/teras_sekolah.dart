@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import 'package:sisko_v5/providers/berita_provider.dart';
-import 'package:sisko_v5/providers/sqlite_user_provider.dart';
+import 'package:app5/providers/berita_provider.dart';
+import 'package:app5/providers/sqlite_user_provider.dart';
 
 class TerasSekolah extends StatelessWidget {
   const TerasSekolah({super.key});
@@ -13,21 +13,23 @@ class TerasSekolah extends StatelessWidget {
 
     bool isSiswa = false;
     int limit = 3;
-    String id = user.currentuser.siskoid.toString();
-    String tokenss = user.currentuser.tokenss.toString();
-    if (user.currentuser.siskoid != null && user.currentuser.tokenss != null) {
+    var id = user.currentuser.siskonpsn;
+    var tokenss = user.currentuser.tokenss;
+    if (id != null && tokenss != null) {
       context
           .watch<BeritaProvider>()
-          .fetchList(id: id, tokenss: tokenss.substring(0, 30), limit: limit);
+          .fetchList(id: id, tokenss: tokenss, limit: limit);
     }
-    if (user.currentuser.siskostatuslogin == 's') {
+    if (user.currentuser.siskostatuslogin == 's' ||
+        user.currentuser.siskostatuslogin == 'i' ||
+        user.currentuser.siskostatuslogin == 'a') {
       isSiswa = true;
     }
 
     return Center(
       child: Card(
         color: Theme.of(context).colorScheme.onPrimary,
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         child: Column(
           children: [
             ClipRRect(
@@ -38,7 +40,7 @@ class TerasSekolah extends StatelessWidget {
                   Container(
                     padding:
                         const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    color: const Color.fromARGB(255, 82, 82, 82),
+                    color: Theme.of(context).colorScheme.secondary,
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -48,7 +50,9 @@ class TerasSekolah extends StatelessWidget {
                               color: Colors.white, fontWeight: FontWeight.bold),
                         ),
                         isSiswa
-                            ? const SizedBox()
+                            ? Container(
+                                height: 48,
+                              )
                             : TextButton(
                                 onPressed: () {
                                   Navigator.pushNamed(
@@ -108,18 +112,20 @@ class TerasSekolah extends StatelessWidget {
                                       terasSekolah.post ?? '',
                                       maxLines: 2,
                                       overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(
-                                          color: Color.fromARGB(
-                                              255, 121, 120, 120)),
+                                      style: TextStyle(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .tertiary),
                                     ),
                                     Text(
                                       terasSekolah.pembuat ?? '',
                                       maxLines: 2,
                                       overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                           fontStyle: FontStyle.italic,
-                                          color: Color.fromARGB(
-                                              255, 121, 120, 120)),
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .tertiary),
                                     ),
                                   ],
                                 ),
@@ -153,7 +159,11 @@ class TerasSekolah extends StatelessWidget {
                     children: [
                       TextButton(
                         onPressed: () {
-                          Navigator.pushNamed(context, '/list-teras-sekolah');
+                          isSiswa
+                              ? Navigator.pushNamed(
+                                  context, '/list-teras-sekolah-sat')
+                              : Navigator.pushNamed(
+                                  context, '/list-teras-sekolah');
                         },
                         child: const Row(
                           children: [

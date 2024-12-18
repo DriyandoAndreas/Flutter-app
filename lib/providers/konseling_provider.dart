@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:sisko_v5/models/konseling_model.dart';
-import 'package:sisko_v5/services/konseling_service.dart';
+import 'package:app5/models/konseling_model.dart';
+import 'package:app5/services/konseling_service.dart';
 
+///*************Gac konseling provider */
 class KonselingProvider with ChangeNotifier {
   final KonselingService konselingService = KonselingService();
   List<KonselingModel> _list = [];
@@ -17,7 +18,7 @@ class KonselingProvider with ChangeNotifier {
     try {
       await infiniteList(id: id, tokenss: tokenss);
     } catch (e) {
-      throw Exception(e);
+      return;
     }
   }
 
@@ -25,14 +26,15 @@ class KonselingProvider with ChangeNotifier {
     try {
       await infinitKelas(id: id, tokenss: tokenss);
     } catch (e) {
-      throw Exception(e);
+      return;
     }
   }
+
   Future<void> initPoin({required String id, required String tokenss}) async {
     try {
       await infinitPoin(id: id, tokenss: tokenss);
     } catch (e) {
-      throw Exception(e);
+      return;
     }
   }
 
@@ -48,7 +50,7 @@ class KonselingProvider with ChangeNotifier {
       _list = respon;
       notifyListeners();
     } catch (e) {
-      throw Exception(e);
+      return;
     }
   }
 
@@ -64,25 +66,25 @@ class KonselingProvider with ChangeNotifier {
       _listKelas = respon;
       notifyListeners();
     } catch (e) {
-      throw Exception(e);
+      return;
     }
   }
+
   Future<void> infinitPoin(
       {required String id, required String tokenss}) async {
     try {
       _limit += 10;
-      List<PoinModel> respon = await konselingService.getPoin(
-          id: id, tokenss: tokenss);
+      List<PoinModel> respon =
+          await konselingService.getPoin(id: id, tokenss: tokenss);
       if (respon.length < _limit) {
         hasMore = false;
       }
       _listPoin = respon;
       notifyListeners();
     } catch (e) {
-      throw Exception(e);
+      return;
     }
   }
-  
 
   Future<void> refresh({required String id, required String tokenss}) async {
     _list = [];
@@ -95,5 +97,40 @@ class KonselingProvider with ChangeNotifier {
     _listKelas = [];
     hasMore = true;
     await infinitKelas(id: id, tokenss: tokenss);
+  }
+
+  Future<void> clearState() async {
+    _list = [];
+    _listKelas = [];
+    _listPoin = [];
+    notifyListeners();
+  }
+}
+
+/////////////////////////////////////////////////
+///*******************Sat konseling provider */
+class SatKonselingProvider with ChangeNotifier {
+  SatKonselingService service = SatKonselingService();
+  List<SatKonselingModel> _list = [];
+  List<SatKonselingModel> get list => _list;
+
+  Future<void> getList({
+    required String id,
+    required String tokenss,
+  }) async {
+    try {
+      //
+      List<SatKonselingModel> respon =
+          await service.getList(id: id, tokenss: tokenss);
+      _list = respon;
+      notifyListeners();
+    } catch (e) {
+      return;
+    }
+  }
+
+  Future<void> clearState() async {
+    _list = [];
+    notifyListeners();
   }
 }

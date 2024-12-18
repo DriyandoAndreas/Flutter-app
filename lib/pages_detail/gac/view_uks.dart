@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:sisko_v5/database/sqlite_helper.dart';
-import 'package:sisko_v5/models/sqlite_user_model.dart';
-import 'package:sisko_v5/models/uks_model.dart';
-import 'package:sisko_v5/services/uks_service.dart';
+import 'package:provider/provider.dart';
+import 'package:app5/models/uks_model.dart';
+import 'package:app5/providers/sqlite_user_provider.dart';
+import 'package:app5/services/uks_service.dart';
 
 class DetailUks extends StatefulWidget {
   const DetailUks({super.key});
@@ -13,13 +13,15 @@ class DetailUks extends StatefulWidget {
 }
 
 class _DetailUksState extends State<DetailUks> {
-  late SqLiteHelper _sqLiteHelper;
-  late List<SqliteUserModel> _users = [];
   late List<UksViewObatModel> _obat = [];
   @override
   void initState() {
     super.initState();
-    _sqLiteHelper = SqLiteHelper();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
     _initData();
   }
 
@@ -29,7 +31,6 @@ class _DetailUksState extends State<DetailUks> {
   }
 
   Future<void> _initData() async {
-    await _loadUsers();
     // ignore: use_build_context_synchronously
     if (ModalRoute.of(context)!.settings.arguments != null) {
       UksModel uks =
@@ -40,23 +41,11 @@ class _DetailUksState extends State<DetailUks> {
     }
   }
 
-  Future<void> _loadUsers() async {
-    try {
-      final users = await _sqLiteHelper.getusers();
-      setState(() {
-        _users = users;
-      });
-    } catch (e) {
-      throw Exception('Failed to fetch data from SQLite');
-    }
-  }
-
   Future<void> _loadList(String param2) async {
     try {
-      final currentUser = _users.isNotEmpty ? _users.first : null;
-      String? id = currentUser?.siskoid;
-      String? tokenss = currentUser?.tokenss;
-
+      final user = Provider.of<SqliteUserProvider>(context, listen: false);
+      var id = user.currentuser.siskonpsn;
+      var tokenss = user.currentuser.tokenss;
       if (id != null && tokenss != null) {
         final paginatedList = await UksService().getObatDetail(
           id: id,
@@ -70,7 +59,7 @@ class _DetailUksState extends State<DetailUks> {
         throw Exception('Invalid ID or token');
       }
     } catch (e) {
-      throw Exception('Failed to load data $e');
+      return;
     }
   }
 
@@ -93,6 +82,7 @@ class _DetailUksState extends State<DetailUks> {
         child: Container(
           padding: const EdgeInsets.all(16),
           child: Card(
+            color: Theme.of(context).colorScheme.onPrimary,
             child: Column(
               children: [
                 ClipRRect(
@@ -111,8 +101,10 @@ class _DetailUksState extends State<DetailUks> {
                           children: [
                             Text(
                               '${uks.namaLengkap}',
-                              style: const TextStyle(
-                                  color: Colors.white, fontSize: 18),
+                              style: TextStyle(
+                                  color:
+                                      Theme.of(context).colorScheme.onPrimary,
+                                  fontSize: 18),
                             ),
                           ],
                         ),
@@ -128,7 +120,12 @@ class _DetailUksState extends State<DetailUks> {
                             const SizedBox(
                               height: 10,
                             ),
-                            Text('${uks.diagnosa}'),
+                            Text(
+                              '${uks.diagnosa}',
+                              style: TextStyle(
+                                  color:
+                                      Theme.of(context).colorScheme.tertiary),
+                            ),
                             const SizedBox(
                               height: 8,
                             ),
@@ -160,9 +157,29 @@ class _DetailUksState extends State<DetailUks> {
                                   itemBuilder: (context, index) {
                                     final obat = _obat[index];
                                     return ListTile(
-                                      title: Text(
-                                        obat.namaObat ?? '',
-                                        style: const TextStyle(fontSize: 14),
+                                      title: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(
+                                            obat.namaObat ?? '',
+                                            style: TextStyle(
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .tertiary,
+                                                fontSize: 14),
+                                          ),
+                                          const SizedBox(
+                                            width: 12,
+                                          ),
+                                          Text(
+                                            obat.jumobat ?? '',
+                                            style: TextStyle(
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .tertiary,
+                                                fontSize: 14),
+                                          ),
+                                        ],
                                       ),
                                     );
                                   },
@@ -186,7 +203,12 @@ class _DetailUksState extends State<DetailUks> {
                             const SizedBox(
                               height: 10,
                             ),
-                            Text('${uks.ket}'),
+                            Text(
+                              '${uks.ket}',
+                              style: TextStyle(
+                                  color:
+                                      Theme.of(context).colorScheme.tertiary),
+                            ),
                             const SizedBox(
                               height: 8,
                             ),
@@ -203,10 +225,17 @@ class _DetailUksState extends State<DetailUks> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
+                            Text(formatDate('${uks.tglPeriksa}'),
+                                style: TextStyle(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .tertiary)),
                             Text(
-                              formatDate('${uks.tglPeriksa}'),
+                              '${uks.paraf}',
+                              style: TextStyle(
+                                  color:
+                                      Theme.of(context).colorScheme.tertiary),
                             ),
-                            Text('${uks.paraf}'),
                           ],
                         ),
                       )

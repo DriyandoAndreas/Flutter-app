@@ -1,6 +1,5 @@
 import 'package:path/path.dart';
-import 'package:sisko_v5/models/sqlite_user_model.dart';
-
+import 'package:app5/models/sqlite_user_model.dart';
 import 'package:sqflite/sqflite.dart';
 
 class SqLiteHelper {
@@ -10,11 +9,14 @@ class SqLiteHelper {
       id_user TEXT,
       user_name TEXT,
       password TEXT, 
+      nomor TEXT, 
       nomor_sc TEXT, 
       position TEXT, 
       cpos TEXT, 
       photopp TEXT,
       nama TEXT, 
+      nama_lengkap TEXT, 
+      kelas TEXT, 
       kelamin TEXT, 
       email TEXT,
       join_sisko TEXT, 
@@ -37,7 +39,8 @@ class SqLiteHelper {
       tokenss TEXT,
       tokenpp TEXT,
       islogin INTEGER,
-      hp TEXT
+      hp TEXT,
+      tgl_lahir TEXT
       )''';
 //init db
   Future<Database> initDB() async {
@@ -73,6 +76,7 @@ class SqLiteHelper {
         iduser: maps[index]['id_user'],
         username: maps[index]['user_name'],
         password: maps[index]['password'],
+        nomor: maps[index]['nomor'],
         nomorsc: maps[index]['nomor_sc'],
         position: maps[index]['position'],
         cpos: maps[index]['cpos'],
@@ -101,6 +105,9 @@ class SqLiteHelper {
         email: maps[index]['email'],
         token: maps[index]['token'],
         tokenss: maps[index]['tokenss'],
+        tanggallahir: maps[index]['tgl_lahir'],
+        namalengkap: maps[index]['nama_lengkap'],
+        kelas: maps[index]['kelas'],
       );
     });
   }
@@ -130,5 +137,33 @@ class SqLiteHelper {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, "users.db");
     await deleteDatabase(path);
+  }
+
+  Future<void> disconnectUser() async {
+    final db = await initDB();
+    await db.rawUpdate(
+        'UPDATE users SET id_user =  ? , sisko_npsn = ? , sisko_kode = ? , sisko_status_login  = ?,nama_lengkap  = ? , kelas = ?',
+        ['', '', '', '', '', '']);
+  }
+
+  Future<void> reconnectUser({
+    required String iduser,
+    required String siskonpsn,
+    required String siskokode,
+    required String siskostatuslogin,
+    required String siskonamalengkap,
+    required String siskokelas,
+  }) async {
+    final db = await initDB();
+    await db.rawUpdate(
+        'UPDATE users SET id_user =  ? , sisko_npsn = ? , sisko_kode = ? , sisko_status_login  = ?, nama_lengkap  = ? , kelas = ?',
+        [
+          iduser,
+          siskonpsn,
+          siskokode,
+          siskostatuslogin,
+          siskonamalengkap,
+          siskokelas
+        ]);
   }
 }

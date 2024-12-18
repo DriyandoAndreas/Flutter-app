@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import 'package:sisko_v5/models/teras_sekolah_model.dart';
-import 'package:sisko_v5/providers/berita_provider.dart';
-import 'package:sisko_v5/providers/sqlite_user_provider.dart';
-import 'package:sisko_v5/services/berita_service.dart';
+import 'package:app5/models/teras_sekolah_model.dart';
+import 'package:app5/providers/berita_provider.dart';
+import 'package:app5/providers/sqlite_user_provider.dart';
+import 'package:app5/services/berita_service.dart';
 
 class ListTerasSekolah extends StatefulWidget {
   const ListTerasSekolah({
@@ -42,24 +42,23 @@ class _ListTerasSekolahState extends State<ListTerasSekolah> {
       final user = Provider.of<SqliteUserProvider>(context, listen: false);
       user.fetchUser();
     } catch (e) {
-      throw Exception(e);
+      return;
     }
   }
 
   Future<void> _loadList() async {
     try {
       final user = Provider.of<SqliteUserProvider>(context, listen: false);
-      String id = user.currentuser.siskoid.toString();
-      String tokenss = user.currentuser.tokenss.toString();
-      if (user.currentuser.siskoid != null &&
-          user.currentuser.tokenss != null) {
+      var id = user.currentuser.siskonpsn;
+      var tokenss = user.currentuser.tokenss;
+      if (id != null && tokenss != null) {
         context.read<BeritaProvider>().initInfinite(
               id: id,
               tokenss: tokenss.substring(0, 30),
             );
       }
     } catch (e) {
-      throw Exception(e);
+      return;
     }
   }
 
@@ -72,10 +71,10 @@ class _ListTerasSekolahState extends State<ListTerasSekolah> {
 
   Future<void> _refreshList() async {
     final user = Provider.of<SqliteUserProvider>(context, listen: false);
-    String id = user.currentuser.siskoid.toString();
-    String tokenss = user.currentuser.tokenss.toString();
-    if (user.currentuser.siskoid != null && user.currentuser.tokenss != null) {
-      context.watch<BeritaProvider>().refresh(
+    var id = user.currentuser.siskonpsn;
+    var tokenss = user.currentuser.tokenss;
+    if (id != null && tokenss != null) {
+      context.read<BeritaProvider>().refresh(
             id: id,
             tokenss: tokenss.substring(0, 30),
           );
@@ -90,7 +89,7 @@ class _ListTerasSekolahState extends State<ListTerasSekolah> {
         surfaceTintColor: Theme.of(context).colorScheme.onPrimary,
         title: const Text('Teras Sekolah'),
       ),
-      body: RefreshIndicator(
+      body: RefreshIndicator.adaptive(
         onRefresh: _refreshList,
         child: _buildList(),
       ),
@@ -199,20 +198,20 @@ class _ListTerasSekolahState extends State<ListTerasSekolah> {
             terasSekolah.post ?? '',
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(color: Color.fromARGB(255, 121, 120, 120)),
+            style: TextStyle(color: Theme.of(context).colorScheme.tertiary),
           ),
           Text(
             terasSekolah.pembuat ?? '',
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
+            style: TextStyle(
                 fontStyle: FontStyle.italic,
-                color: Color.fromARGB(255, 121, 120, 120)),
+                color: Theme.of(context).colorScheme.tertiary),
           ),
         ],
       ),
       leading: Image.network(
-        terasSekolah.image ?? '',
+        terasSekolah.image,
         width: 60,
         height: 60,
         fit: BoxFit.cover,
@@ -225,19 +224,19 @@ class _ListTerasSekolahState extends State<ListTerasSekolah> {
         children: [
           Text(
             dateFormat,
-            style: const TextStyle(color: Color.fromARGB(255, 121, 120, 120)),
+            style: TextStyle(color: Theme.of(context).colorScheme.tertiary),
           ),
           const SizedBox(
             width: 8,
           ),
           isAuthorized
-              ? const Icon(
+              ? Icon(
                   Icons.edit_note,
-                  color: Color.fromARGB(255, 121, 120, 120),
+                  color: Theme.of(context).colorScheme.tertiary,
                 )
-              : const Icon(
+              : Icon(
                   Icons.arrow_forward_ios,
-                  color: Color.fromARGB(255, 121, 120, 120),
+                  color: Theme.of(context).colorScheme.tertiary,
                 ),
         ],
       ),
@@ -258,8 +257,8 @@ class _ListTerasSekolahState extends State<ListTerasSekolah> {
               onPressed: () async {
                 final user =
                     Provider.of<SqliteUserProvider>(context, listen: false);
-                final id = user.currentuser.siskoid;
-                final tokenss = user.currentuser.tokenss;
+                var id = user.currentuser.siskonpsn;
+                var tokenss = user.currentuser.tokenss;
                 if (id != null && tokenss != null) {
                   try {
                     await BeritaService().deleteBerita(
@@ -269,17 +268,22 @@ class _ListTerasSekolahState extends State<ListTerasSekolah> {
                       idc: terasSekolah.kode ?? '',
                     );
                     scaffold.showSnackBar(
-                      const SnackBar(
-                        content: Text('Berita berhasil dihapus'),
-                        duration: Duration(seconds: 1),
-                        behavior: SnackBarBehavior.floating,
+                      SnackBar(
+                        // ignore: use_build_context_synchronously
+                        backgroundColor: Theme.of(context).colorScheme.primary,
+                        content: Text('Berita berhasil dihapus',
+                            style: TextStyle(
+                                // ignore: use_build_context_synchronously
+                                color:
+                                    // ignore: use_build_context_synchronously
+                                    Theme.of(context).colorScheme.onPrimary)),
                       ),
                     );
                     // ignore: use_build_context_synchronously
                     Navigator.of(context).pop();
                     _refreshList();
                   } catch (e) {
-                    throw Exception('$e');
+                    return;
                   }
                 }
               },

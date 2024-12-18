@@ -4,11 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import 'package:sisko_v5/database/sqlite_helper.dart';
-import 'package:sisko_v5/models/sqlite_user_model.dart';
-import 'package:sisko_v5/models/teras_sekolah_model.dart';
-import 'package:sisko_v5/providers/berita_provider.dart';
-import 'package:sisko_v5/services/berita_service.dart';
+import 'package:app5/database/sqlite_helper.dart';
+import 'package:app5/models/sqlite_user_model.dart';
+import 'package:app5/models/teras_sekolah_model.dart';
+import 'package:app5/providers/berita_provider.dart';
+import 'package:app5/services/berita_service.dart';
 
 class FormEditTerasSekolah extends StatefulWidget {
   const FormEditTerasSekolah({super.key});
@@ -48,7 +48,7 @@ class _FormEditTerasSekolahState extends State<FormEditTerasSekolah> {
         _users = users;
       });
     } catch (e) {
-      throw Exception('Gagal mengambil data dari sqlite');
+      return;
     }
   }
 
@@ -99,7 +99,7 @@ class _FormEditTerasSekolahState extends State<FormEditTerasSekolah> {
   @override
   Widget build(BuildContext context) {
     final currentUser = _users.isNotEmpty ? _users.first : null;
-    String? id = currentUser?.siskoid;
+    String? id = currentUser?.siskonpsn;
     String? tokenss = currentUser?.tokenss;
     final inputDate = DateFormat('yyyy-MM-dd').format(selectedDate);
     final inputEndDate = DateFormat('yyyy-MM-dd').format(endSelectedDate);
@@ -142,7 +142,12 @@ class _FormEditTerasSekolahState extends State<FormEditTerasSekolah> {
                                 padding: const EdgeInsets.all(10),
                                 child: Image.file(_selectedImage!),
                               )
-                            : Image.network(terasSekolah.image!)),
+                            : Image.network(
+                                terasSekolah.image!,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return const Icon(Icons.image);
+                                },
+                              )),
                   ),
                 ),
               ),
@@ -279,7 +284,7 @@ class _FormEditTerasSekolahState extends State<FormEditTerasSekolah> {
                       // ignore: use_build_context_synchronously
                       final scaffold = ScaffoldMessenger.of(context);
 
-                      if (id != null && tokenss != null) {
+                      if (id!=null && tokenss != null) {
                         String guruValue = ischeckedGuru ? 'GR' : '';
                         String karyawanValue = ischeckedKaryawan ? 'KR' : '';
                         String siswaValue = ischeckedSis ? 'SIS' : '';
@@ -294,31 +299,29 @@ class _FormEditTerasSekolahState extends State<FormEditTerasSekolah> {
                         if (judul.text.isEmpty) {
                           scaffold.showSnackBar(
                             SnackBar(
-                              content: const Text('Judul tidak boleh kosong'),
+                              backgroundColor:
+                                  Theme.of(context).colorScheme.primary,
+                              content: Text('Judul tidak boleh kosong',
+                                  style: TextStyle(
+                                      // ignore: use_build_context_synchronously
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onPrimary)),
                               duration: const Duration(seconds: 1),
-                              behavior: SnackBarBehavior.floating,
-                              margin: EdgeInsets.only(
-                                // ignore: use_build_context_synchronously
-                                bottom:
-                                    MediaQuery.of(context).size.height - 150,
-                                left: 15,
-                                right: 15,
-                              ),
                             ),
                           );
                         } else if (isi.text.isEmpty) {
                           scaffold.showSnackBar(
                             SnackBar(
-                              content: const Text('Konten tidak boleh kosong'),
+                              backgroundColor:
+                                  Theme.of(context).colorScheme.primary,
+                              content: Text('Konten tidak boleh kosong',
+                                  style: TextStyle(
+                                      // ignore: use_build_context_synchronously
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onPrimary)),
                               duration: const Duration(seconds: 1),
-                              behavior: SnackBarBehavior.floating,
-                              margin: EdgeInsets.only(
-                                // ignore: use_build_context_synchronously
-                                bottom:
-                                    MediaQuery.of(context).size.height - 150,
-                                left: 15,
-                                right: 15,
-                              ),
                             ),
                           );
                         } else {
@@ -343,24 +346,25 @@ class _FormEditTerasSekolahState extends State<FormEditTerasSekolah> {
 
                           scaffold.showSnackBar(
                             SnackBar(
-                              content: const Text('Berita berhasil di edit'),
-                              duration: const Duration(seconds: 1),
-                              behavior: SnackBarBehavior.floating,
-                              margin: EdgeInsets.only(
-                                // ignore: use_build_context_synchronously
-                                bottom:
-                                    // ignore: use_build_context_synchronously
-                                    MediaQuery.of(context).size.height - 150,
-                                left: 15,
-                                right: 15,
-                              ),
+                              // ignore: use_build_context_synchronously
+                              backgroundColor:
+                                  // ignore: use_build_context_synchronously
+                                  Theme.of(context).colorScheme.primary,
+                              content: Text('Berita berhasil di edit',
+                                  style: TextStyle(
+                                      // ignore: use_build_context_synchronously
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onPrimary)),
                             ),
                           );
                           // ignore: use_build_context_synchronously
-                          Future.delayed(const Duration(seconds: 2), () {
+                          Future.delayed(const Duration(seconds: 1), () {
+                            // ignore: use_build_context_synchronously
                             context
                                 .read<BeritaProvider>()
                                 .refresh(id: id, tokenss: tokenss ?? '');
+                            // ignore: use_build_context_synchronously
                             Navigator.of(context).pop();
                           });
                           setState(() {
@@ -370,20 +374,19 @@ class _FormEditTerasSekolahState extends State<FormEditTerasSekolah> {
                       } else {
                         scaffold.showSnackBar(
                           SnackBar(
-                            content: const Text('Berita gagal di edit'),
-                            duration: const Duration(seconds: 1),
-                            behavior: SnackBarBehavior.floating,
-                            margin: EdgeInsets.only(
-                              // ignore: use_build_context_synchronously
-                              bottom: MediaQuery.of(context).size.height - 150,
-                              left: 15,
-                              right: 15,
-                            ),
+                            backgroundColor:
+                                Theme.of(context).colorScheme.primary,
+                            content: Text('Berita gagal di edit',
+                                style: TextStyle(
+                                    // ignore: use_build_context_synchronously
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onPrimary)),
                           ),
                         );
                       }
                     } catch (e) {
-                      throw Exception('$e');
+                      return;
                     }
                   },
                   style: TextButton.styleFrom(
@@ -392,8 +395,8 @@ class _FormEditTerasSekolahState extends State<FormEditTerasSekolah> {
                     backgroundColor: const Color.fromARGB(255, 73, 72, 72),
                   ),
                   child: isloading
-                      ? const CircularProgressIndicator(
-                          color: Colors.white,
+                      ? const CircularProgressIndicator.adaptive(
+                          backgroundColor: Colors.white,
                         )
                       : const Text(
                           'Simpan',

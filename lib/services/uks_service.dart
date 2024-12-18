@@ -1,8 +1,9 @@
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:sisko_v5/models/uks_model.dart';
+import 'package:app5/models/uks_model.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
+//******Gac uks service */
 class UksService {
   var apiUrl = dotenv.env['API_URL_SISKO_DEV'];
   Future<List<UksModel>> getList({
@@ -31,7 +32,7 @@ class UksService {
             'Failed to get list. Status code: ${response.statusCode}');
       }
     } catch (e) {
-      throw Exception('Error: $e');
+      return [];
     }
   }
 
@@ -63,7 +64,7 @@ class UksService {
             'Failed to get list. Status code: ${response.statusCode}');
       }
     } catch (e) {
-      throw Exception('Error: $e');
+      return [];
     }
   }
 
@@ -96,7 +97,7 @@ class UksService {
             'Failed to get list. Status code: ${response.statusCode}');
       }
     } catch (e) {
-      throw Exception('Error: $e');
+      return [];
     }
   }
 
@@ -128,7 +129,7 @@ class UksService {
             'Failed to get list. Status code: ${response.statusCode}');
       }
     } catch (e) {
-      throw Exception('Error: $e');
+      return [];
     }
   }
 
@@ -136,7 +137,7 @@ class UksService {
     required String id,
     required String tokenss,
   }) async {
-    var url = Uri.parse('$apiUrl/client_api/modul/uks/lists-obat.php?');
+    var url = Uri.parse('$apiUrl/client_api/modul/uks/lists-obat.php');
     var headers = {
       'ID': id,
       'tokenss': tokenss,
@@ -158,7 +159,7 @@ class UksService {
             'Failed to get list. Status code: ${response.statusCode}');
       }
     } catch (e) {
-      throw Exception('Error: $e');
+      return [];
     }
   }
 
@@ -190,7 +191,7 @@ class UksService {
             'Failed to get list. Status code: ${response.statusCode}');
       }
     } catch (e) {
-      throw Exception('Error: $e');
+      return [];
     }
   }
 
@@ -212,21 +213,35 @@ class UksService {
       'ID': id,
       'tokenss': tokenss,
     };
-    var body = {
-      'action': action,
-      'nis': nis,
-      'tgl': tgl,
-      'diagnosa': diagnosa,
-      'ket': ket,
-      'obat[0]': obat0,
-      'obat[1]': obat1,
-      'stock[0]': stock0,
-      'stock[1]': stock1,
-    };
+    var body = {};
+    if (obat1 == '' && stock1 == '' || obat1.isEmpty && stock1.isEmpty) {
+      body = {
+        'action': action,
+        'nis': nis,
+        'tgl': tgl,
+        'diagnosa': diagnosa,
+        'ket': ket,
+        'obat[0]': obat0,
+        'stock[0]': stock0,
+      };
+    } else {
+      body = {
+        'action': action,
+        'nis': nis,
+        'tgl': tgl,
+        'diagnosa': diagnosa,
+        'ket': ket,
+        'obat[0]': obat0,
+        'obat[1]': obat1,
+        'stock[0]': stock0,
+        'stock[1]': stock1,
+      };
+    }
+
     try {
       await http.post(url, headers: headers, body: body);
     } catch (e) {
-      throw Exception('Error, Gagal menambahkan data: $e');
+      return;
     }
   }
 
@@ -249,22 +264,36 @@ class UksService {
       'ID': id,
       'tokenss': tokenss,
     };
-    var body = {
-      'action': action,
-      'kd_periksa': kdPeriksa,
-      'nis': nis,
-      'tgl': tgl,
-      'diagnosa': diagnosa,
-      'ket': ket,
-      'obat[0]': obat0,
-      'obat[1]': obat1,
-      'stock[0]': stock0,
-      'stock[1]': stock1,
-    };
+    var body = {};
+    if (obat1 == '' && stock1 == '' || obat1.isEmpty && stock1.isEmpty) {
+      body = {
+        'action': action,
+        'kd_periksa': kdPeriksa,
+        'nis': nis,
+        'tgl': tgl,
+        'diagnosa': diagnosa,
+        'ket': ket,
+        'obat[0]': obat0,
+        'stock[0]': stock0,
+      };
+    } else {
+      body = {
+        'action': action,
+        'kd_periksa': kdPeriksa,
+        'nis': nis,
+        'tgl': tgl,
+        'diagnosa': diagnosa,
+        'ket': ket,
+        'obat[0]': obat0,
+        'obat[1]': obat1,
+        'stock[0]': stock0,
+        'stock[1]': stock1,
+      };
+    }
     try {
       await http.post(url, headers: headers, body: body);
     } catch (e) {
-      throw Exception('Error, Gagal edit data: $e');
+      return;
     }
   }
 
@@ -286,7 +315,40 @@ class UksService {
     try {
       await http.post(url, headers: headers, body: body);
     } catch (e) {
-      throw Exception('Error, Gagal menambahkan data: $e');
+      return;
+    }
+  }
+}
+
+/////////////////////////////////////////
+///******Sat uks service */
+class SatUksService {
+  var apiUrl = dotenv.env['API_URL_SISKO_DEV'];
+  Future<List<SatUksModel>> getList({
+    required String id,
+    required String tokenss,
+  }) async {
+    var url = Uri.parse('$apiUrl/client_api/modul_sat/uks/list.php');
+    var headers = {
+      'ID': id,
+      'tokenss': tokenss,
+    };
+    try {
+      var response = await http.get(
+        url,
+        headers: headers,
+      );
+      if (response.statusCode == 200) {
+        final List<dynamic> responseData = json.decode(response.body)['datas'];
+        List<SatUksModel> listuks =
+            responseData.map((data) => SatUksModel.fromJson(data)).toList();
+        return listuks;
+      } else {
+        throw Exception(
+            'Failed to get list. Status code: ${response.statusCode}');
+      }
+    } catch (e) {
+      return [];
     }
   }
 }

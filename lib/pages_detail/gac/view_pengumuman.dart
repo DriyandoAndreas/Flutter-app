@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:intl/intl.dart';
-import 'package:sisko_v5/models/pengumuman_model.dart';
+import 'package:app5/models/pengumuman_model.dart';
 
 class DetailPengumuman extends StatelessWidget {
   const DetailPengumuman({super.key});

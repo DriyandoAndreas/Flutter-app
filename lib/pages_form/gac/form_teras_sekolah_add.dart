@@ -1,13 +1,15 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:app5/services/openai_service.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import 'package:sisko_v5/database/sqlite_helper.dart';
-import 'package:sisko_v5/models/sqlite_user_model.dart';
-import 'package:sisko_v5/providers/berita_provider.dart';
-import 'package:sisko_v5/services/berita_service.dart';
+import 'package:app5/database/sqlite_helper.dart';
+import 'package:app5/models/sqlite_user_model.dart';
+import 'package:app5/providers/berita_provider.dart';
+import 'package:app5/providers/theme_switch_provider.dart';
+import 'package:app5/services/berita_service.dart';
 
 class FormTerasSekolah extends StatefulWidget {
   const FormTerasSekolah({super.key});
@@ -29,6 +31,7 @@ class _FormTerasSekolahState extends State<FormTerasSekolah> {
   String? tanggal;
   String? tanggalKadaluarsa;
   bool isloading = false;
+  final OpenAIService _openAIService = OpenAIService();
 
   late SqLiteHelper _sqLiteHelper;
   late List<SqliteUserModel> _users = [];
@@ -36,7 +39,6 @@ class _FormTerasSekolahState extends State<FormTerasSekolah> {
   @override
   void initState() {
     super.initState();
-    // Provider.of<SqliteUserProvider>(context, listen: false).fetchUser();
     _sqLiteHelper = SqLiteHelper();
     _loadUsers();
   }
@@ -48,7 +50,7 @@ class _FormTerasSekolahState extends State<FormTerasSekolah> {
         _users = users;
       });
     } catch (e) {
-      throw Exception('Gagal mengambil data dari sqlite');
+      return;
     }
   }
 
@@ -58,6 +60,23 @@ class _FormTerasSekolahState extends State<FormTerasSekolah> {
       initialDate: selectedDate,
       firstDate: DateTime(2015, 8),
       lastDate: DateTime(2101),
+      builder: (context, child) {
+        return Theme(
+            data: ThemeData(
+                brightness: context.watch<ThemeSwitchProvider>().isDark
+                    ? Brightness.dark
+                    : Brightness.light,
+                colorScheme: context.watch<ThemeSwitchProvider>().isDark
+                    ? ColorScheme.dark(
+                        surface: Colors.grey.shade900, primary: Colors.white)
+                    : const ColorScheme.light(
+                        surface: Colors.white, primary: Colors.black),
+                dialogBackgroundColor:
+                    context.watch<ThemeSwitchProvider>().isDark
+                        ? Colors.black
+                        : Colors.white),
+            child: child!);
+      },
     );
 
     if (picked != null && picked != selectedDate) {
@@ -69,10 +88,28 @@ class _FormTerasSekolahState extends State<FormTerasSekolah> {
 
   Future<void> _endDate(BuildContext context) async {
     final DateTime? endDate = await showDatePicker(
-        context: context,
-        initialDate: endSelectedDate,
-        firstDate: DateTime(2015, 8),
-        lastDate: DateTime(2101));
+      context: context,
+      initialDate: endSelectedDate,
+      firstDate: DateTime(2015, 8),
+      lastDate: DateTime(2101),
+      builder: (context, child) {
+        return Theme(
+            data: ThemeData(
+                brightness: context.watch<ThemeSwitchProvider>().isDark
+                    ? Brightness.dark
+                    : Brightness.light,
+                colorScheme: context.watch<ThemeSwitchProvider>().isDark
+                    ? ColorScheme.dark(
+                        surface: Colors.grey.shade900, primary: Colors.white)
+                    : const ColorScheme.light(
+                        surface: Colors.white, primary: Colors.black),
+                dialogBackgroundColor:
+                    context.watch<ThemeSwitchProvider>().isDark
+                        ? Colors.black
+                        : Colors.white),
+            child: child!);
+      },
+    );
     if (endDate != null && endDate != endSelectedDate) {
       setState(() {
         endSelectedDate = endDate;
@@ -80,10 +117,46 @@ class _FormTerasSekolahState extends State<FormTerasSekolah> {
     }
   }
 
+  Future<void> _generateContent() async {
+    if (judul.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Judul tidak boleh kosong')),
+      );
+      return;
+    }
+
+    setState(() {
+      isloading = true;
+    });
+
+    try {
+      String prompt = "Buatkan saya konten tentang ${judul.text}.";
+      String content = await _openAIService.generateContent(prompt);
+
+      setState(() {
+        isi.text = content;
+      });
+
+      // ignore: use_build_context_synchronously
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Konten berhasil dihasilkan')),
+      );
+    } catch (e) {
+      // ignore: use_build_context_synchronously
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal menghasilkan konten: $e')),
+      );
+    } finally {
+      setState(() {
+        isloading = false;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final currentUser = _users.isNotEmpty ? _users.first : null;
-    String? id = currentUser?.siskoid;
+    String? id = currentUser?.siskonpsn;
     String? tokenss = currentUser?.tokenss;
     final inputDate = DateFormat('yyyy-MM-dd').format(selectedDate);
     final inputEndDate = DateFormat('yyyy-MM-dd').format(endSelectedDate);
@@ -100,7 +173,6 @@ class _FormTerasSekolahState extends State<FormTerasSekolah> {
     }
 
     return Scaffold(
-      // backgroundColor: backgroundcolor,
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.onPrimary,
         surfaceTintColor: Theme.of(context).colorScheme.onPrimary,
@@ -191,14 +263,28 @@ class _FormTerasSekolahState extends State<FormTerasSekolah> {
                 thickness: 0.5,
               ),
               const Text('Konten/Deskirpsi'),
-              SizedBox(
-                height: 50,
-                child: TextFormField(
-                  controller: isi,
-                  decoration: const InputDecoration.collapsed(
-                      hintText: 'Isi konten / deskripsi',
-                      hintStyle: TextStyle(color: Colors.grey)),
-                ),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  // TextFormField takes most of the available space
+                  Expanded(
+                    child: SizedBox(
+                      height: 50,
+                      child: TextFormField(
+                        controller: isi,
+                        decoration: const InputDecoration.collapsed(
+                          hintText: 'Isi konten / deskripsi',
+                          hintStyle: TextStyle(color: Colors.grey),
+                        ),
+                      ),
+                    ),
+                  ),
+                  // IconButton stays on the right
+                  IconButton(
+                    onPressed: _generateContent,
+                    icon: const Icon(Icons.auto_awesome),
+                  ),
+                ],
               ),
               const Divider(
                 thickness: 0.5,
@@ -281,47 +367,23 @@ class _FormTerasSekolahState extends State<FormTerasSekolah> {
                         tokenss = tokenss?.substring(0, 30);
                         if (base64Image == null) {
                           scaffold.showSnackBar(
-                            SnackBar(
-                              content: const Text('Gambar tidak boleh kosong'),
-                              duration: const Duration(seconds: 1),
-                              behavior: SnackBarBehavior.floating,
-                              margin: EdgeInsets.only(
-                                // ignore: use_build_context_synchronously
-                                bottom:
-                                    MediaQuery.of(context).size.height - 150,
-                                left: 15,
-                                right: 15,
-                              ),
+                            const SnackBar(
+                              content: Text('Gambar tidak boleh kosong'),
+                              duration: Duration(seconds: 1),
                             ),
                           );
                         } else if (judul.text.isEmpty) {
                           scaffold.showSnackBar(
-                            SnackBar(
-                              content: const Text('Judul tidak boleh kosong'),
-                              duration: const Duration(seconds: 1),
-                              behavior: SnackBarBehavior.floating,
-                              margin: EdgeInsets.only(
-                                // ignore: use_build_context_synchronously
-                                bottom:
-                                    MediaQuery.of(context).size.height - 150,
-                                left: 15,
-                                right: 15,
-                              ),
+                            const SnackBar(
+                              content: Text('Judul tidak boleh kosong'),
+                              duration: Duration(seconds: 1),
                             ),
                           );
                         } else if (isi.text.isEmpty) {
                           scaffold.showSnackBar(
-                            SnackBar(
-                              content: const Text('Konten tidak boleh kosong'),
-                              duration: const Duration(seconds: 1),
-                              behavior: SnackBarBehavior.floating,
-                              margin: EdgeInsets.only(
-                                // ignore: use_build_context_synchronously
-                                bottom:
-                                    MediaQuery.of(context).size.height - 150,
-                                left: 15,
-                                right: 15,
-                              ),
+                            const SnackBar(
+                              content: Text('Konten tidak boleh kosong'),
+                              duration: Duration(seconds: 1),
                             ),
                           );
                         } else {
@@ -341,28 +403,31 @@ class _FormTerasSekolahState extends State<FormTerasSekolah> {
                             wysiwyg: '0',
                             untuk: untuk,
                           );
-
                           scaffold.showSnackBar(
                             SnackBar(
                               content:
-                                  const Text('Berita berhasil ditambahkan'),
-                              duration: const Duration(seconds: 1),
-                              behavior: SnackBarBehavior.floating,
-                              margin: EdgeInsets.only(
-                                // ignore: use_build_context_synchronously
-                                bottom:
+                                  // ignore: use_build_context_synchronously
+                                  Text(
+                                'Berita berhasil ditambahkan',
+                                style: TextStyle(
                                     // ignore: use_build_context_synchronously
-                                    MediaQuery.of(context).size.height - 150,
-                                left: 15,
-                                right: 15,
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onPrimary),
                               ),
+                              // ignore: use_build_context_synchronously
+                              backgroundColor:
+                                  // ignore: use_build_context_synchronously
+                                  Theme.of(context).colorScheme.primary,
                             ),
                           );
                           // ignore: use_build_context_synchronously
-                          Future.delayed(const Duration(seconds: 2), () {
+                          Future.delayed(const Duration(seconds: 1), () {
+                            // ignore: use_build_context_synchronously
                             context
                                 .read<BeritaProvider>()
                                 .refresh(id: id, tokenss: tokenss ?? '');
+                            // ignore: use_build_context_synchronously
                             Navigator.of(context).pop();
                           });
                           setState(() {
@@ -372,20 +437,19 @@ class _FormTerasSekolahState extends State<FormTerasSekolah> {
                       } else {
                         scaffold.showSnackBar(
                           SnackBar(
-                            content: const Text('Berita gagal ditambahkan'),
-                            duration: const Duration(seconds: 1),
-                            behavior: SnackBarBehavior.floating,
-                            margin: EdgeInsets.only(
-                              // ignore: use_build_context_synchronously
-                              bottom: MediaQuery.of(context).size.height - 150,
-                              left: 15,
-                              right: 15,
-                            ),
+                            backgroundColor:
+                                Theme.of(context).colorScheme.primary,
+                            content: Text('Berita gagal ditambahkan',
+                                style: TextStyle(
+                                    // ignore: use_build_context_synchronously
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onPrimary)),
                           ),
                         );
                       }
                     } catch (e) {
-                      throw Exception('$e');
+                      return;
                     }
                   },
                   style: TextButton.styleFrom(
@@ -394,8 +458,8 @@ class _FormTerasSekolahState extends State<FormTerasSekolah> {
                     backgroundColor: const Color.fromARGB(255, 73, 72, 72),
                   ),
                   child: isloading
-                      ? const CircularProgressIndicator(
-                          color: Colors.white,
+                      ? const CircularProgressIndicator.adaptive(
+                          backgroundColor: Colors.white,
                         )
                       : const Text(
                           'Simpan',

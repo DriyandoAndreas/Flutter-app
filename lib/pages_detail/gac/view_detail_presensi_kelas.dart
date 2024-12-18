@@ -1,11 +1,13 @@
+import 'package:app5/providers/sqlite_user_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import 'package:sisko_v5/database/sqlite_helper.dart';
-import 'package:sisko_v5/models/presensi_model.dart';
-import 'package:sisko_v5/models/sqlite_user_model.dart';
-import 'package:sisko_v5/providers/presensi_provider.dart';
-import 'package:sisko_v5/services/presensi_service.dart';
+import 'package:app5/database/sqlite_helper.dart';
+import 'package:app5/models/presensi_model.dart';
+import 'package:app5/models/sqlite_user_model.dart';
+import 'package:app5/providers/presensi_provider.dart';
+import 'package:app5/services/presensi_service.dart';
 
 class DetailPresensiOpen extends StatefulWidget {
   const DetailPresensiOpen({super.key});
@@ -18,6 +20,7 @@ class _DetailPresensiOpenState extends State<DetailPresensiOpen> {
   String todayformat = '';
   String todayformatform = '';
   bool isLoading = false;
+  bool noData = false;
   late SqLiteHelper _sqLiteHelper;
   late List<SqliteUserModel> _users = [];
   late List<PresensiKelasOpenModel> _listSiswa = [];
@@ -54,29 +57,32 @@ class _DetailPresensiOpenState extends State<DetailPresensiOpen> {
         _users = users;
       });
     } catch (e) {
-      throw Exception('Gagal mengambil data dari sqlite');
+      return;
     }
   }
 
   Future<void> loadListSiswa(String kodeKelas) async {
     try {
       final currentUser = _users.isNotEmpty ? _users.first : null;
-      String? id = currentUser?.siskoid;
+      String? id = currentUser?.siskonpsn;
       String? tokenss = currentUser?.tokenss;
       if (id != null && tokenss != null) {
-        final lists = await PresensiService().getKelasOpen(
-          id: id,
-          tokenss: tokenss.substring(0, 30),
-          kodeKelas: kodeKelas,
-        );
-
+        // ignore: use_build_context_synchronously
+        await context
+            .read<PresensiProvider>()
+            .initKelasOpen(id: id, tokenss: tokenss, kodeKelas: kodeKelas);
+        // ignore: use_build_context_synchronously
+        var datas = context.read<PresensiProvider>().listKelasOpen;
         setState(() {
-          _listSiswa = lists
+          _listSiswa = datas
               .map((siswa) => PresensiKelasOpenModel(
                     namaLengkap: siswa.namaLengkap,
                     nis: siswa.nis,
                     absen: _getfullAbsen(siswa.absen ?? 'Hadir'),
                     shortAbsen: siswa.absen ?? 'H',
+                    statusLogin: siswa.statusLogin ?? '',
+                    file: siswa.file ?? '',
+                    keterangan: siswa.keterangan ?? '',
                   ))
               .toList();
         });
@@ -84,7 +90,7 @@ class _DetailPresensiOpenState extends State<DetailPresensiOpen> {
         throw Exception('Invalid ID or token');
       }
     } catch (e) {
-      throw Exception('gagal load list $e');
+      return;
     }
   }
 
@@ -131,9 +137,6 @@ class _DetailPresensiOpenState extends State<DetailPresensiOpen> {
 
   @override
   Widget build(BuildContext context) {
-    final currentUser = _users.isNotEmpty ? _users.first : null;
-    String? id = currentUser?.siskoid;
-    String? tokenss = currentUser?.tokenss;
     DateTime today = DateTime.now();
     DateTime todayform = DateTime.now();
     todayformat = DateFormat("EEE d MMM yyyy").format(today);
@@ -258,192 +261,352 @@ class _DetailPresensiOpenState extends State<DetailPresensiOpen> {
           Expanded(
             child: buildList(),
           ),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(12),
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.grey.shade700,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  )),
-              onPressed: () async {
-                final scaffold = ScaffoldMessenger.of(context);
-                List<String> nis =
-                    _listSiswa.map((siswa) => siswa.nis!).toList();
-                List<String> jenisAbsen =
-                    _listSiswa.map((siswa) => siswa.shortAbsen!).toList();
-                try {
-                  setState(() {
-                    isLoading = true;
-                  });
-                  await PresensiService().addPresensi(
-                      id: id!,
-                      tokenss: tokenss!,
-                      action: 'edit',
-                      tanggal: todayformatform,
-                      nis: nis,
-                      jenisAbsen: jenisAbsen,
-                      mode: 'presensi');
-                  scaffold.showSnackBar(
-                    SnackBar(
-                      content: const Text('Absen berhasil disimpan'),
-                      duration: const Duration(seconds: 1),
-                      behavior: SnackBarBehavior.floating,
-                      margin: EdgeInsets.only(
-                        // ignore: use_build_context_synchronously
-                        bottom:
+          _listSiswa.isNotEmpty
+              ? Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.grey.shade700,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        )),
+                    onPressed: () async {
+                      final scaffold = ScaffoldMessenger.of(context);
+                      List<String> nis =
+                          _listSiswa.map((siswa) => siswa.nis!).toList();
+                      List<String> jenisAbsen =
+                          _listSiswa.map((siswa) => siswa.shortAbsen!).toList();
+
+                      try {
+                        setState(() {
+                          isLoading = true;
+                        });
+                        final user = Provider.of<SqliteUserProvider>(context,
+                            listen: false);
+                        var id = user.currentuser.siskonpsn;
+                        var tokenss = user.currentuser.tokenss;
+                        if (id != null && tokenss != null) {
+                          await PresensiService().addPresensi(
+                              id: id,
+                              tokenss: tokenss,
+                              action: 'edit',
+                              tanggal: todayformatform,
+                              nis: nis,
+                              jenisAbsen: jenisAbsen,
+                              mode: 'presensi');
+
+                          scaffold.showSnackBar(
+                            SnackBar(
+                              backgroundColor:
+                                  // ignore: use_build_context_synchronously
+                                  Theme.of(context).colorScheme.primary,
+                              content: Text('Absen berhasil disimpan',
+                                  style: TextStyle(
+                                      // ignore: use_build_context_synchronously
+                                      color:
+                                          // ignore: use_build_context_synchronously
+                                          Theme.of(context)
+                                              .colorScheme
+                                              .onPrimary)),
+                            ),
+                          );
+                          Future.delayed(const Duration(seconds: 1), () {
                             // ignore: use_build_context_synchronously
-                            MediaQuery.of(context).size.height - 150,
-                        left: 15,
-                        right: 15,
-                      ),
-                    ),
-                  );
-                  Future.delayed(const Duration(seconds: 2), () {
-                    context
-                        .read<PresensiProvider>()
-                        .refresh(id: id, tokenss: tokenss);
-                    Navigator.of(context).pop();
-                  });
-                  setState(() {
-                    isLoading = false;
-                  });
-                } catch (e) {
-                  throw Exception(e);
-                }
-              },
-              child: isLoading
-                  ? const CircularProgressIndicator(
-                      color: Colors.white,
-                    )
-                  : const Text(
-                      'Submit',
-                      style: TextStyle(color: Colors.white),
-                    ),
-            ),
-          )
+                            context
+                                .read<PresensiProvider>()
+                                .refresh(id: id, tokenss: tokenss);
+                            // ignore: use_build_context_synchronously
+                            Navigator.of(context).pop();
+                          });
+                        }
+                        setState(() {
+                          isLoading = false;
+                        });
+                      } catch (e) {
+                        return;
+                      }
+                    },
+                    child: isLoading
+                        ? const CircularProgressIndicator.adaptive(
+                            backgroundColor: Colors.white,
+                          )
+                        : const Text(
+                            'Submit',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                  ),
+                )
+              : const SizedBox.shrink()
         ],
       ),
     );
   }
 
   Widget buildList() {
-    double width = MediaQuery.of(context).size.width;
-    if (_listSiswa.isEmpty) {
-      return const Center(
-        child: CircularProgressIndicator(),
-      );
-    } else {
-      return ListView.builder(
-        shrinkWrap: true,
-        itemCount: _listSiswa.length,
-        itemBuilder: (context, index) {
-          final listsSiswa = _listSiswa[index];
-
-          return Column(
-            children: [
-              ListTile(
-                onTap: () {
-                  showModalBottomSheet(
-                      context: context,
-                      builder: (context) {
-                        return StatefulBuilder(
-                          builder: (context, setState) {
-                            return Container(
-                              padding: const EdgeInsets.all(8),
-                              height: 300,
-                              width: width,
-                              child: Column(
-                                children: <Widget>[
-                                  RadioListTile<String>(
-                                    title: const Text('Hadir'),
-                                    value: 'Hadir',
-                                    groupValue: listsSiswa.absen,
-                                    activeColor: Colors.blue,
-                                    onChanged: (String? value) {
-                                      updateAbsen(listsSiswa, value);
-                                      setState(() {});
-                                      Navigator.pop(context);
-                                    },
-                                  ),
-                                  RadioListTile<String>(
-                                    title: const Text('Sakit'),
-                                    value: 'Sakit',
-                                    groupValue: listsSiswa.absen,
-                                    activeColor: Colors.blue,
-                                    onChanged: (String? value) {
-                                      updateAbsen(listsSiswa, value);
-                                      setState(() {});
-                                      Navigator.pop(context);
-                                    },
-                                  ),
-                                  RadioListTile<String>(
-                                    title: const Text('Ijin'),
-                                    value: 'Ijin',
-                                    groupValue: listsSiswa.absen,
-                                    activeColor: Colors.blue,
-                                    onChanged: (String? value) {
-                                      updateAbsen(listsSiswa, value);
-                                      setState(() {});
-                                      Navigator.pop(context);
-                                    },
-                                  ),
-                                  RadioListTile<String>(
-                                    title: const Text('Alpha'),
-                                    value: 'Alpha',
-                                    groupValue: listsSiswa.absen,
-                                    activeColor: Colors.blue,
-                                    onChanged: (String? value) {
-                                      updateAbsen(listsSiswa, value);
-                                      setState(() {});
-                                      Navigator.pop(context);
-                                    },
-                                  ),
-                                  RadioListTile<String>(
-                                    title: const Text('Terlambat'),
-                                    value: 'Terlambat',
-                                    groupValue: listsSiswa.absen,
-                                    activeColor: Colors.blue,
-                                    onChanged: (String? value) {
-                                      updateAbsen(listsSiswa, value);
-                                      setState(() {});
-                                      Navigator.pop(context);
-                                    },
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
-                        );
-                      }).then((selectedStatus) {
-                    if (selectedStatus != null) {
-                      setState(() {
-                        listsSiswa.absen = selectedStatus;
-                      });
-                    }
-                  });
-                },
-                title: Text(
-                  listsSiswa.nis!,
-                  style: const TextStyle(fontSize: 14),
-                ),
-                subtitle: Text(
-                  listsSiswa.namaLengkap!,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                trailing: Text(listsSiswa.absen ?? '',
-                    style: const TextStyle(
-                        color: Color.fromARGB(255, 121, 120, 120))),
-              ),
-              const Divider(
-                thickness: 0.1,
-              ),
-            ],
+    return Consumer<PresensiProvider>(
+      builder: (context, kelasOpen, child) {
+        if (kelasOpen.isLoading) {
+          return const Center(
+            child: CircularProgressIndicator.adaptive(),
           );
-        },
-      );
-    }
+        } else if (kelasOpen.listKelasOpen.isEmpty) {
+          return const Center(
+            child: Text('Tidak ada data siswa pada kelas ini'),
+          );
+        } else {
+          return ListView.builder(
+            shrinkWrap: true,
+            itemCount: _listSiswa.length,
+            itemBuilder: (context, index) {
+              final listsSiswa = _listSiswa[index];
+              var pemohon = 'Orang tua';
+              var isOrtu = false;
+              var isSakit = false;
+              if (listsSiswa.shortAbsen == 'S') {
+                isSakit = true;
+              }
+              if (listsSiswa.statusLogin == 'a' ||
+                  listsSiswa.statusLogin == 'i' ||
+                  listsSiswa.statusLogin == 'o' ||
+                  listsSiswa.statusLogin == 's') {
+                isOrtu = true;
+              }
+              switch (listsSiswa.statusLogin) {
+                case 'a':
+                  pemohon = 'Ayah';
+                  break;
+                case 'i':
+                  pemohon = 'Ibu';
+                  break;
+                case 'o':
+                  pemohon = 'Orang Tua';
+                  break;
+                case 's':
+                  pemohon = 'Siswa';
+                  break;
+                default:
+              }
+              return Column(
+                children: [
+                  isOrtu
+                      ? Slidable(
+                          endActionPane: ActionPane(
+                            motion: const BehindMotion(),
+                            children: [
+                              isSakit
+                                  ? SlidableAction(
+                                      onPressed: (context) async {
+                                        Navigator.pushNamed(
+                                            context, '/view-surat-sakit',
+                                            arguments: listsSiswa);
+                                      },
+                                      label: 'Lihat Surat Sakit',
+                                      icon: Icons.visibility,
+                                      backgroundColor: Colors.grey.shade600,
+                                    )
+                                  : SlidableAction(
+                                      onPressed: (context) async {
+                                        null;
+                                      },
+                                      icon: Icons.visibility,
+                                      backgroundColor: Colors.grey.shade600,
+                                    ),
+                            ],
+                          ),
+                          child:
+                              buildListTileOrtu(listsSiswa, pemohon, isSakit))
+                      : buildListTile(listsSiswa),
+                  const Divider(
+                    thickness: 0.1,
+                  ),
+                ],
+              );
+            },
+          );
+        }
+      },
+    );
+  }
+
+  Widget buildListTile(listsSiswa) {
+    double width = MediaQuery.of(context).size.width;
+    return ListTile(
+      onTap: () {
+        showModalBottomSheet(
+            backgroundColor: Theme.of(context).colorScheme.primaryFixed,
+            context: context,
+            builder: (context) {
+              return StatefulBuilder(
+                builder: (context, setState) {
+                  return Container(
+                    padding: const EdgeInsets.all(8),
+                    height: 300,
+                    width: width,
+                    child: Column(
+                      children: <Widget>[
+                        RadioListTile<String>(
+                          title: const Text('Hadir'),
+                          value: 'Hadir',
+                          groupValue: listsSiswa.absen,
+                          activeColor: Theme.of(context).colorScheme.primary,
+                          onChanged: (String? value) {
+                            updateAbsen(listsSiswa, value);
+                            setState(() {});
+                            Navigator.pop(context);
+                          },
+                        ),
+                        RadioListTile<String>(
+                          title: const Text('Sakit'),
+                          value: 'Sakit',
+                          groupValue: listsSiswa.absen,
+                          activeColor: Theme.of(context).colorScheme.primary,
+                          onChanged: (String? value) {
+                            updateAbsen(listsSiswa, value);
+                            setState(() {});
+                            Navigator.pop(context);
+                          },
+                        ),
+                        RadioListTile<String>(
+                          title: const Text('Ijin'),
+                          value: 'Ijin',
+                          groupValue: listsSiswa.absen,
+                          activeColor: Theme.of(context).colorScheme.primary,
+                          onChanged: (String? value) {
+                            updateAbsen(listsSiswa, value);
+                            setState(() {});
+                            Navigator.pop(context);
+                          },
+                        ),
+                        RadioListTile<String>(
+                          title: const Text('Alpha'),
+                          value: 'Alpha',
+                          groupValue: listsSiswa.absen,
+                          activeColor: Theme.of(context).colorScheme.primary,
+                          onChanged: (String? value) {
+                            updateAbsen(listsSiswa, value);
+                            setState(() {});
+                            Navigator.pop(context);
+                          },
+                        ),
+                        RadioListTile<String>(
+                          title: const Text('Terlambat'),
+                          value: 'Terlambat',
+                          groupValue: listsSiswa.absen,
+                          activeColor: Theme.of(context).colorScheme.primary,
+                          onChanged: (String? value) {
+                            updateAbsen(listsSiswa, value);
+                            setState(() {});
+                            Navigator.pop(context);
+                          },
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              );
+            }).then((selectedStatus) {
+          if (selectedStatus != null) {
+            setState(() {
+              listsSiswa.absen = selectedStatus;
+            });
+          }
+        });
+      },
+      title: Text(
+        listsSiswa.nis!,
+        style: const TextStyle(fontSize: 14),
+      ),
+      subtitle: Text(
+        listsSiswa.namaLengkap!,
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+      ),
+      trailing: Text(listsSiswa.absen ?? '',
+          style: TextStyle(color: Theme.of(context).colorScheme.tertiary)),
+    );
+  }
+
+  Widget buildListTileOrtu(listsSiswa, pemohon, isSakit) {
+    double width = MediaQuery.of(context).size.width;
+    return ListTile(
+      onTap: () {
+        showModalBottomSheet(
+            backgroundColor: Theme.of(context).colorScheme.primaryFixed,
+            context: context,
+            builder: (context) {
+              return StatefulBuilder(
+                builder: (context, setState) {
+                  return Container(
+                    padding: const EdgeInsets.all(8),
+                    height: 300,
+                    width: width,
+                    child: Column(
+                      children: <Widget>[
+                        RadioListTile<String>(
+                          title: Text('${listsSiswa.absen}'),
+                          value: '${listsSiswa.absen}',
+                          groupValue: listsSiswa.absen,
+                          activeColor: Theme.of(context).colorScheme.primary,
+                          onChanged: (String? value) {
+                            updateAbsen(listsSiswa, value);
+                            setState(() {});
+                            Navigator.pop(context);
+                          },
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              );
+            }).then((selectedStatus) {
+          if (selectedStatus != null) {
+            setState(() {
+              listsSiswa.absen = selectedStatus;
+            });
+          }
+        });
+      },
+      title: Text(
+        listsSiswa.nis!,
+        style: const TextStyle(fontSize: 14),
+      ),
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            listsSiswa.namaLengkap!,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(
+            height: 8,
+          ),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                '${listsSiswa.keterangan}-$pemohon',
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(color: Theme.of(context).colorScheme.tertiary),
+              ),
+              const SizedBox(
+                width: 8,
+              ),
+              isSakit
+                  ? Icon(
+                      Icons.mail,
+                      size: 20,
+                      color: Theme.of(context).colorScheme.tertiary,
+                    )
+                  : const SizedBox.shrink(),
+            ],
+          ),
+        ],
+      ),
+      trailing: Text(listsSiswa.absen ?? '',
+          style: TextStyle(color: Theme.of(context).colorScheme.tertiary)),
+    );
   }
 }

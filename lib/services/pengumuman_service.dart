@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:sisko_v5/models/pengumuman_model.dart';
+import 'package:app5/models/pengumuman_model.dart';
 import 'package:http/http.dart' as http;
 
 class PengumumanService {

@@ -2,6 +2,7 @@ class InfoModel {
   String? iduser;
   String? username;
   String? password;
+  String? nomor;
   String? nomorsc;
   String? position;
   String? cpos;
@@ -28,6 +29,7 @@ class InfoModel {
     this.iduser,
     this.username,
     this.password,
+    this.nomor,
     this.nomorsc,
     this.position,
     this.cpos,
@@ -53,30 +55,31 @@ class InfoModel {
 
   InfoModel.fromJson(Map<String, dynamic> json) {
     InfoModel(
-      iduser: json['id_user'],
-      username: json['username'],
-      password: json['password'],
-      nomorsc: json['nomor_sc'],
-      position: json['position'],
-      cpos: json['cpos'],
-      photopp: json['photopp'],
-      nama: json['nama'],
-      kelamin: json['kelamin'],
-      email: json['email'],
-      join: json['join'],
-      lastlogin: json['last_login'],
-      siskonpsn: json['sisko_npsn'],
-      siskoid: json['sisko_id'],
-      siskokode: json['sisko_kode'],
-      siskostatuslogin: json['sisko_status_login'],
-      verified: json['verified'],
-      active: json['active'],
-      activekey: json['active_key'],
-      uploadphoto: json['upload_photo'],
-      photo: json['photo'],
-      photothumb: json['photo_thumb'],
+      iduser: json['id_user'] ?? '',
+      username: json['username'] ?? '',
+      password: json['password'] ?? '',
+      nomor: json['nomor'] ?? '',    
+      nomorsc: json['nomor_sc'] ?? '',    
+      position: json['position'] ?? '',
+      cpos: json['cpos'] ?? '',
+      photopp: json['photopp'] ?? '',
+      nama: json['nama'] ?? '',
+      kelamin: json['kelamin'] ?? '',
+      email: json['email'] ?? '',
+      join: json['join'] ?? '',
+      lastlogin: json['last_login'] ?? '',
+      siskonpsn: json['sisko_npsn'] ?? '',
+      siskoid: json['sisko_id'] ?? '',
+      siskokode: json['sisko_kode'] ?? '',
+      siskostatuslogin: json['sisko_status_login'] ?? '',
+      verified: json['verified'] ?? '',
+      active: json['active'] ?? '',
+      activekey: json['active_key'] ?? '',
+      uploadphoto: json['upload_photo'] ?? '',
+      photo: json['photo'] ?? '',
+      photothumb: json['photo_thumb'] ?? '',
       photoPP: PhotoPP.fromJson(json['photo_pp']),
-      ip: json['ip'],
+      ip: json['ip'] ?? '',
     );
   }
   Map<String, dynamic> toJson() {
@@ -84,6 +87,7 @@ class InfoModel {
       'id_user': iduser,
       'username': username,
       'password': password,
+      'nomor': nomor,
       'nomor_sc': nomorsc,
       'position': position,
       'cpos': cpos,
@@ -119,8 +123,8 @@ class PhotoPP {
   });
   PhotoPP.fromJson(Map<String, dynamic> json) {
     PhotoPP(
-      photodefault: json['photo_default'],
-      photodefaultthumb: json['photo_default_thumb'],
+      photodefault: json['photo_default'] ?? '',
+      photodefaultthumb: json['photo_default_thumb'] ?? '',
     );
   }
   Map<String, dynamic> toJson() {

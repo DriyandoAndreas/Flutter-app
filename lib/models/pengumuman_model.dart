@@ -24,23 +24,18 @@ class PengumumanModel {
       this.post});
 
   factory PengumumanModel.fromJson(Map<String, dynamic> json) {
-    String cleanString(String input) {
-      final RegExp pattern = RegExp('[\'\\"\\\\/]');
-      return input.replaceAll(pattern, '');
-    }
-
     return PengumumanModel(
-      kode: json['kode'],
-      tgl: json['tgl'],
-      judul: cleanString(json['judul']),
-      isi: json['isi'],
-      untuk: json['untuk'],
-      terbaca: json['terbaca'],
-      pembuat: json['pembuat'],
-      penginput: json['penginput'],
+      kode: json['kode'] ?? '',
+      tgl: json['tgl'] ?? '',
+      judul: json['judul'] ?? '',
+      isi: json['isi'] ?? '',
+      untuk: json['untuk'] ?? '',
+      terbaca: json['terbaca'] ?? '',
+      pembuat: json['pembuat'] ?? '',
+      penginput: json['penginput'] ?? '',
       images: List<String>.from(json['images']),
-      image: json['image'],
-      post: cleanString(json['post']),
+      image: json['image'] ?? '',
+      post: json['post'] ?? '',
     );
   }
   Map<String, dynamic> toJson() {
